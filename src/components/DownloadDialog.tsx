@@ -18,7 +18,7 @@ import { toast } from "sonner";
 const schema = z.object({
   name: z.string().trim().min(2, "Please enter your name").max(100),
   email: z.string().trim().email("Please enter a valid email").max(255),
-  phone: z.string().trim().min(7, "Please enter your phone number").max(30),
+  phone: z.string().trim().min(10, "Please enter your phone number").max(10),
   message: z.string().trim().max(500).optional().or(z.literal("")),
 });
 
