@@ -75,6 +75,7 @@ function AdminPage() {
           <thead className="bg-[color:var(--gold)]/10 text-[color:var(--maroon)]">
             <tr className="text-left">
               <th className="px-4 py-3 font-medium">Date</th>
+              <th className="px-4 py-3 font-medium">Action</th>
               <th className="px-4 py-3 font-medium">Name</th>
               <th className="px-4 py-3 font-medium">Email</th>
               <th className="px-4 py-3 font-medium">Phone</th>
@@ -83,15 +84,20 @@ function AdminPage() {
           </thead>
           <tbody>
             {loading && (
-              <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">Loading…</td></tr>
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Loading…</td></tr>
             )}
             {!loading && rows && rows.length === 0 && (
-              <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">No downloads yet.</td></tr>
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">No records yet.</td></tr>
             )}
             {rows?.map((r) => (
               <tr key={r.id} className="border-t border-[color:var(--rule)]/40 align-top">
                 <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
                   {new Date(r.created_at).toLocaleString()}
+                </td>
+                <td className="px-4 py-3">
+                  <span className={`inline-block px-2 py-0.5 text-[10px] uppercase tracking-wider border ${r.action === "download" ? "border-[color:var(--maroon)] text-[color:var(--maroon)]" : "border-[color:var(--gold-deep)] text-[color:var(--gold-deep)]"}`}>
+                    {r.action ?? "view"}
+                  </span>
                 </td>
                 <td className="px-4 py-3">{r.name}</td>
                 <td className="px-4 py-3">
