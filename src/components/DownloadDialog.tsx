@@ -18,7 +18,7 @@ import { toast } from "sonner";
 const schema = z.object({
   name: z.string().trim().min(2, "Please enter your name").max(100),
   email: z.string().trim().email("Please enter a valid email").max(255),
-  phone: z.string().trim().max(30).optional().or(z.literal("")),
+  phone: z.string().trim().min(7, "Please enter your phone number").max(30),
   message: z.string().trim().max(500).optional().or(z.literal("")),
 });
 
@@ -48,7 +48,7 @@ export function DownloadDialog({
     const { error } = await supabase.from("downloads").insert({
       name: parsed.data.name,
       email: parsed.data.email,
-      phone: parsed.data.phone || null,
+      phone: parsed.data.phone,
       message: parsed.data.message || null,
       user_agent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 500) : null,
     });
@@ -81,8 +81,8 @@ export function DownloadDialog({
             <Input id="email" type="email" value={form.email} onChange={update("email")} required maxLength={255} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="phone">Phone (optional)</Label>
-            <Input id="phone" value={form.phone} onChange={update("phone")} maxLength={30} />
+            <Label htmlFor="phone">Phone *</Label>
+            <Input id="phone" type="tel" value={form.phone} onChange={update("phone")} required maxLength={30} />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="message">Relation / Message (optional)</Label>
