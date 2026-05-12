@@ -9,12 +9,7 @@ export const Route = createFileRoute("/")({
   component: Index,
   head: () => ({
     meta: [
-      { title: "Devansh Sah — Profile" },
-      {
-        name: "description",
-        content:
-          "Personal profile of Devansh Sah, Software Engineer based in Pune.",
-      },
+      { title: "Devansh Sah" },
     ],
   }),
 });
@@ -39,9 +34,6 @@ function Index() {
     return (
       <main className="min-h-screen flex items-center justify-center px-4 py-16">
         <div className="max-w-xl w-full text-center bg-card border border-[color:var(--gold)]/40 px-8 py-14 shadow-[var(--shadow-elegant)]">
-          <p className="text-[11px] uppercase tracking-[0.32em] text-[color:var(--gold-deep)] mb-4">
-            Biodata
-          </p>
           <h1 className="text-4xl md:text-5xl font-serif text-[color:var(--maroon)] mb-3">
             Devansh Sah
           </h1>
@@ -50,7 +42,7 @@ function Index() {
           </p>
           <Button onClick={() => setViewOpen(true)} size="lg" className="gap-2 rounded-none px-8">
             <Eye className="size-4" />
-            View Biodata
+            View
           </Button>
         </div>
 

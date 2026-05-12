@@ -72,17 +72,6 @@ export function BiodataDocument() {
           }
         />
         <Field
-          label="Brother"
-          value={
-            <>
-              Shri Rishi Sah
-              <span className="block text-sm text-muted-foreground">
-                Mechanical Engineer · Assembly Line Manager, Mercedes Benz India, Pune
-              </span>
-            </>
-          }
-        />
-        <Field
           label="Mother"
           value={
             <>
@@ -107,8 +96,24 @@ export function BiodataDocument() {
           }
         />
         <Field
-          label="Paternal Uncles"
-          value="Shri Dinesh Kumar Sah (Jaipur) · Shri Sanjay Kumar Sah (Indore)"
+          label="Uncles"
+          value={
+            <>
+              Shri Dinesh Kumar Sah (Jaipur)
+              <span className="block mt-1">Shri Sanjay Kumar Sah (Indore)</span>
+            </>
+          }
+        />
+        <Field
+          label="Brother"
+          value={
+            <>
+              Shri Rishi Sah
+              <span className="block text-sm text-muted-foreground">
+                Mechanical Automobile Engineer · Senior Manager - Vehicle Assembly, Jaguar Land Rover, Pune
+              </span>
+            </>
+          }
         />
         <Field
           label="Maternal Grandparents"
