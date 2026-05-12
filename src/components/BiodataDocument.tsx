@@ -1,5 +1,3 @@
-import omSymbol from "@/assets/jain-om.png";
-
 function Field({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="grid grid-cols-[140px_1fr] md:grid-cols-[200px_1fr] gap-x-6 gap-y-1 py-3 border-b border-[color:var(--rule)]/40 last:border-0">
@@ -31,24 +29,20 @@ export function BiodataDocument() {
     <article
       className="biodata-document mx-auto bg-card text-card-foreground px-8 md:px-16 py-12 md:py-16 max-w-3xl border border-[color:var(--gold)]/40 shadow-[var(--shadow-elegant)] relative"
     >
-      {/* Corner ornaments */}
       <div className="pointer-events-none absolute inset-3 border border-[color:var(--gold)]/30" />
 
       <header className="text-center pb-2 relative">
-        <img
-          src={omSymbol}
-          alt="Jain Om"
-          width={72}
-          height={72}
-          className="mx-auto h-16 w-16 object-contain"
-        />
-        <h1 className="mt-6 text-5xl md:text-6xl font-serif text-[color:var(--maroon)]">
+        <p className="text-[10px] uppercase tracking-[0.45em] text-[color:var(--gold-deep)] font-medium">
+          Biodata
+        </p>
+        <h1 className="mt-5 text-5xl md:text-7xl font-serif text-[color:var(--maroon)] leading-none">
           Devansh Sah
         </h1>
-        <p className="mt-3 text-sm md:text-base text-muted-foreground italic font-serif">
-          Software Engineer · Pune
-        </p>
-        <hr className="gold-rule mx-auto mt-8 w-2/3" />
+        <div className="mt-5 flex items-center justify-center gap-3 text-[color:var(--gold-deep)]">
+          <span className="h-px w-10 bg-[color:var(--gold)]" />
+          <span className="text-xs uppercase tracking-[0.3em]">Software Engineer · Pune</span>
+          <span className="h-px w-10 bg-[color:var(--gold)]" />
+        </div>
       </header>
 
       <Section title="Personal Details">
@@ -60,7 +54,7 @@ export function BiodataDocument() {
       </Section>
 
       <Section title="Education & Profession">
-        <Field label="Education" value="B.E. Computer Science Engineering" />
+        <Field label="Education" value="B.Tech Computer Science Engineering" />
         <Field label="Profession" value="Software Engineer" />
         <Field label="Company" value="Cellpoint Digital Pvt. Ltd., Pune" />
       </Section>
@@ -89,6 +83,17 @@ export function BiodataDocument() {
           }
         />
         <Field
+          label="Mother"
+          value={
+            <>
+              Smt. Ritu Sah
+              <span className="block text-sm text-muted-foreground">
+                Homemaker · Ex Jewellery Designer
+              </span>
+            </>
+          }
+        />
+        <Field
           label="Paternal Grandparents"
           value={
             <>
@@ -106,17 +111,6 @@ export function BiodataDocument() {
           value="Shri Dinesh Kumar Sah (Jaipur) · Shri Sanjay Kumar Sah (Indore)"
         />
         <Field
-          label="Mother"
-          value={
-            <>
-              Smt. Ritu Sah
-              <span className="block text-sm text-muted-foreground">
-                Homemaker · Ex Jewellery Designer
-              </span>
-            </>
-          }
-        />
-        <Field
           label="Maternal Grandparents"
           value={
             <>
@@ -132,12 +126,12 @@ export function BiodataDocument() {
       </Section>
 
       <Section title="Contact">
-        <Field label="Address" value="B-39, Sangam Vihar, Bani Park, Jaipur — 302016" />
-        <Field label="Mobile" value="+91 73400 07777 · +91 73740 97655" />
+        <Field label="Devansh Sah" value="+91 73400 07777" />
+        <Field label="Rajeev Kumar Sah" value="+91 73740 97655" />
+        <Field label="Ritu Sah" value="+91 73401 99958" />
       </Section>
 
-      <hr className="gold-rule mt-12" />
-      <p className="mt-4 text-center text-[11px] uppercase tracking-[0.3em] text-[color:var(--gold-deep)]">
+      <p className="mt-12 text-center text-[11px] uppercase tracking-[0.3em] text-[color:var(--gold-deep)]">
         With Best Wishes
       </p>
     </article>
