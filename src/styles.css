@@ -120,7 +120,11 @@
 @media print {
   @page { size: A4; margin: 14mm; }
   body { background: white !important; }
-  .no-print { display: none !important; }
+  .no-print,
+  [data-sonner-toaster],
+  [role="dialog"],
+  [data-radix-popper-content-wrapper],
+  [data-state="open"][role="dialog"] { display: none !important; }
   .biodata-document {
     box-shadow: none !important;
     margin: 0 !important;
