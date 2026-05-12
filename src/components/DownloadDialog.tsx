@@ -81,8 +81,8 @@ export function DownloadDialog({
             <Input id="email" type="email" value={form.email} onChange={update("email")} required maxLength={255} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="phone">Phone (optional)</Label>
-            <Input id="phone" value={form.phone} onChange={update("phone")} maxLength={30} />
+            <Label htmlFor="phone">Phone *</Label>
+            <Input id="phone" type="tel" value={form.phone} onChange={update("phone")} required maxLength={30} />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="message">Relation / Message (optional)</Label>
