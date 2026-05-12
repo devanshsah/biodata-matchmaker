@@ -48,7 +48,7 @@ export function DownloadDialog({
     const { error } = await supabase.from("downloads").insert({
       name: parsed.data.name,
       email: parsed.data.email,
-      phone: parsed.data.phone || null,
+      phone: parsed.data.phone,
       message: parsed.data.message || null,
       user_agent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 500) : null,
     });
