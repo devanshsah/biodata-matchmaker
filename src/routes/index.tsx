@@ -26,11 +26,13 @@ function Index() {
 
   const triggerDownload = () => {
     const original = document.title;
-    document.title = "Devansh Sah - Biodata";
-    window.print();
+    document.title = "Devansh Sah- Biodata";
     setTimeout(() => {
-      document.title = original;
-    }, 1000);
+      window.print();
+      setTimeout(() => {
+        document.title = original;
+      }, 1000);
+    }, 600);
   };
 
   if (!unlocked) {
