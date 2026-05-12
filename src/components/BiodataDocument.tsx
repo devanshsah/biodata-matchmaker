@@ -63,17 +63,6 @@ export function BiodataDocument() {
           }
         />
         <Field
-          label="Mother"
-          value={
-            <>
-              Ritu Sah
-              <span className="block text-sm text-muted-foreground">
-                Homemaker · Ex Jewellery Designer
-              </span>
-            </>
-          }
-        />
-        <Field
           label="Brother"
           value={
             <>
@@ -97,6 +86,21 @@ export function BiodataDocument() {
           }
         />
         <Field
+          label="Uncles"
+          value="Dinesh Kumar Sah (Jaipur) · Sanjay Kumar Sah (Indore)"
+        />
+        <Field
+          label="Mother"
+          value={
+            <>
+              Ritu Sah
+              <span className="block text-sm text-muted-foreground">
+                Homemaker · Ex Jewellery Designer
+              </span>
+            </>
+          }
+        />
+        <Field
           label="Maternal Grandparents"
           value={
             <>
@@ -108,11 +112,8 @@ export function BiodataDocument() {
             </>
           }
         />
-        <Field
-          label="Uncles"
-          value="Dinesh Kumar Sah (Jaipur) · Sanjay Kumar Sah (Indore)"
-        />
       </Section>
+
 
       <Section title="Contact">
         <Field label="Address" value="B-39, Sangam Vihar, Bani Park, Jaipur — 302016" />
