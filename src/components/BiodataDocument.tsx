@@ -126,8 +126,6 @@ export function BiodataDocument() {
       </Section>
 
       <Section title="Contact">
-        <Field label="Devansh Sah" value="+91 73400 07777" />
-        <Field label="Rajeev Kumar Sah" value="+91 73740 97655" />
         <Field label="Ritu Sah" value="+91 73401 99958" />
       </Section>
 

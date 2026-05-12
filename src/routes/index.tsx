@@ -48,9 +48,6 @@ function Index() {
           <p className="text-sm text-muted-foreground mb-8 tracking-wide">
             Software Engineer · Pune
           </p>
-          <p className="text-sm text-foreground/80 mb-8 leading-relaxed">
-            Please share a few details to view the biodata.
-          </p>
           <Button onClick={() => setViewOpen(true)} size="lg" className="gap-2 rounded-none px-8">
             <Eye className="size-4" />
             View Biodata
