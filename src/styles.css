@@ -27,8 +27,10 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-ink: var(--ink);
-  --color-paper: var(--paper);
+  --color-ivory: var(--ivory);
+  --color-gold: var(--gold);
+  --color-gold-deep: var(--gold-deep);
+  --color-maroon: var(--maroon);
   --color-rule: var(--rule);
   --font-display: var(--font-display);
   --font-serif: var(--font-serif);
@@ -37,61 +39,91 @@
 
 :root {
   --radius: 0.5rem;
-  --background: oklch(0.985 0.003 80);
-  --foreground: oklch(0.18 0.01 60);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.01 60);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.01 60);
-  --primary: oklch(0.2 0.01 60);
-  --primary-foreground: oklch(0.98 0.003 80);
-  --secondary: oklch(0.95 0.005 80);
-  --secondary-foreground: oklch(0.2 0.01 60);
-  --muted: oklch(0.95 0.005 80);
-  --muted-foreground: oklch(0.5 0.01 60);
-  --accent: oklch(0.93 0.01 80);
-  --accent-foreground: oklch(0.2 0.01 60);
+
+  /* Matrimonial palette: ivory paper, deep maroon ink, antique gold accents */
+  --ivory: oklch(0.975 0.012 85);
+  --gold: oklch(0.78 0.12 80);
+  --gold-deep: oklch(0.62 0.12 70);
+  --maroon: oklch(0.32 0.10 25);
+
+  --background: var(--ivory);
+  --foreground: oklch(0.22 0.04 30);
+  --card: oklch(0.99 0.008 85);
+  --card-foreground: oklch(0.22 0.04 30);
+  --popover: oklch(0.99 0.008 85);
+  --popover-foreground: oklch(0.22 0.04 30);
+  --primary: var(--maroon);
+  --primary-foreground: var(--ivory);
+  --secondary: oklch(0.94 0.02 80);
+  --secondary-foreground: var(--maroon);
+  --muted: oklch(0.94 0.02 80);
+  --muted-foreground: oklch(0.45 0.04 40);
+  --accent: oklch(0.92 0.04 80);
+  --accent-foreground: var(--maroon);
   --destructive: oklch(0.55 0.2 27);
   --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.9 0.005 80);
-  --input: oklch(0.92 0.005 80);
-  --ring: oklch(0.6 0.01 60);
+  --border: oklch(0.88 0.03 80);
+  --input: oklch(0.92 0.02 80);
+  --ring: var(--gold-deep);
 
-  --ink: oklch(0.18 0.01 60);
-  --paper: oklch(0.985 0.003 80);
-  --rule: oklch(0.85 0.01 80);
+  --rule: var(--gold);
 
   --font-display: "Cormorant Garamond", "Playfair Display", Georgia, serif;
   --font-serif: "Cormorant Garamond", Georgia, serif;
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --gradient-gold: linear-gradient(90deg, transparent, var(--gold) 20%, var(--gold-deep) 50%, var(--gold) 80%, transparent);
+  --shadow-elegant: 0 30px 60px -30px color-mix(in oklab, var(--maroon) 30%, transparent);
 }
 
 @layer base {
   * { border-color: var(--color-border); }
   body {
-    background: var(--color-paper);
-    color: var(--color-ink);
+    background:
+      radial-gradient(ellipse at top, color-mix(in oklab, var(--gold) 10%, transparent), transparent 60%),
+      var(--ivory);
+    color: var(--color-foreground);
     font-family: var(--font-sans);
-    font-feature-settings: "ss01", "cv11";
     -webkit-font-smoothing: antialiased;
   }
   h1, h2, h3, h4 {
     font-family: var(--font-display);
     font-weight: 500;
-    letter-spacing: -0.01em;
+    letter-spacing: 0.005em;
+    color: var(--maroon);
   }
+}
+
+/* Ornamental gold rule */
+.gold-rule {
+  height: 1px;
+  background: var(--gradient-gold);
+  border: 0;
+}
+
+.ornament {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  color: var(--gold-deep);
+}
+.ornament::before,
+.ornament::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--gradient-gold);
 }
 
 /* Print: clean A4 page */
 @media print {
-  @page { size: A4; margin: 18mm; }
+  @page { size: A4; margin: 14mm; }
   body { background: white !important; }
   .no-print { display: none !important; }
   .biodata-document {
     box-shadow: none !important;
-    border: none !important;
     margin: 0 !important;
-    padding: 0 !important;
     max-width: 100% !important;
   }
 }
