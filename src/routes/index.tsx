@@ -36,6 +36,9 @@ function Index() {
         <p className="text-xs text-muted-foreground mt-3 tracking-wide">
           A short form will appear before download.
         </p>
+        <Link to="/admin" className="mt-6 text-[10px] uppercase tracking-[0.3em] text-muted-foreground hover:text-foreground">
+          Admin
+        </Link>
       </div>
 
       <DownloadDialog open={open} onOpenChange={setOpen} onConfirmed={triggerDownload} />
