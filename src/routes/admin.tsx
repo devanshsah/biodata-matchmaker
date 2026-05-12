@@ -28,7 +28,7 @@ function AdminPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from("downloads")
-      .select("id, name, email, phone, message, created_at")
+      .select("id, name, email, phone, message, action, created_at")
       .order("created_at", { ascending: false });
     setLoading(false);
     if (error) {
