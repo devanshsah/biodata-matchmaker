@@ -15,6 +15,7 @@ type DownloadRow = {
   email: string;
   phone: string | null;
   message: string | null;
+  action: string | null;
   created_at: string;
 };
 
