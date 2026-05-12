@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, Eye } from "lucide-react";
 import { BiodataDocument } from "@/components/BiodataDocument";
 import { DownloadDialog } from "@/components/DownloadDialog";
 
@@ -20,28 +20,71 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const [open, setOpen] = useState(false);
+  const [viewOpen, setViewOpen] = useState(false);
+  const [downloadOpen, setDownloadOpen] = useState(false);
+  const [unlocked, setUnlocked] = useState(false);
 
-  const triggerDownload = () => window.print();
+  const triggerDownload = () => {
+    const original = document.title;
+    document.title = "Devansh Sah - Biodata";
+    window.print();
+    setTimeout(() => {
+      document.title = original;
+    }, 1000);
+  };
+
+  if (!unlocked) {
+    return (
+      <main className="min-h-screen flex items-center justify-center px-4 py-16">
+        <div className="max-w-xl w-full text-center bg-card border border-[color:var(--gold)]/40 px-8 py-14 shadow-[var(--shadow-elegant)]">
+          <p className="text-[11px] uppercase tracking-[0.32em] text-[color:var(--gold-deep)] mb-4">
+            Biodata
+          </p>
+          <h1 className="text-4xl md:text-5xl font-serif text-[color:var(--maroon)] mb-3">
+            Devansh Sah
+          </h1>
+          <p className="text-sm text-muted-foreground mb-8 tracking-wide">
+            Software Engineer · Pune
+          </p>
+          <p className="text-sm text-foreground/80 mb-8 leading-relaxed">
+            Please share a few details to view the biodata.
+          </p>
+          <Button onClick={() => setViewOpen(true)} size="lg" className="gap-2 rounded-none px-8">
+            <Eye className="size-4" />
+            View Biodata
+          </Button>
+        </div>
+
+        <DownloadDialog
+          open={viewOpen}
+          onOpenChange={setViewOpen}
+          onConfirmed={() => setUnlocked(true)}
+          action="view"
+        />
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen px-4 py-12 md:py-20">
       <BiodataDocument />
 
       <div className="no-print mx-auto max-w-2xl mt-10 flex flex-col items-center">
-        <Button onClick={() => setOpen(true)} size="lg" className="gap-2 rounded-none px-8">
+        <Button onClick={() => setDownloadOpen(true)} size="lg" className="gap-2 rounded-none px-8">
           <Download className="size-4" />
           Download as PDF
         </Button>
         <p className="text-xs text-muted-foreground mt-3 tracking-wide">
           A short form will appear before download.
         </p>
-        <Link to="/admin" className="mt-6 text-[10px] uppercase tracking-[0.3em] text-muted-foreground hover:text-foreground">
-          Admin
-        </Link>
       </div>
 
-      <DownloadDialog open={open} onOpenChange={setOpen} onConfirmed={triggerDownload} />
+      <DownloadDialog
+        open={downloadOpen}
+        onOpenChange={setDownloadOpen}
+        onConfirmed={triggerDownload}
+        action="download"
+      />
     </main>
   );
 }

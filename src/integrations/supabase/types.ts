@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       downloads: {
         Row: {
+          action: string
           created_at: string
           email: string
           id: string
@@ -25,6 +26,7 @@ export type Database = {
           user_agent: string | null
         }
         Insert: {
+          action?: string
           created_at?: string
           email: string
           id?: string
@@ -34,6 +36,7 @@ export type Database = {
           user_agent?: string | null
         }
         Update: {
+          action?: string
           created_at?: string
           email?: string
           id?: string

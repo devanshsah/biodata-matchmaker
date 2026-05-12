@@ -22,14 +22,24 @@ const schema = z.object({
   message: z.string().trim().max(500).optional().or(z.literal("")),
 });
 
+type Action = "view" | "download";
+
 export function DownloadDialog({
   open,
   onOpenChange,
   onConfirmed,
+  action = "download",
+  title,
+  description,
+  cta,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirmed: () => void;
+  action?: Action;
+  title?: string;
+  description?: string;
+  cta?: string;
 }) {
   const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
   const [submitting, setSubmitting] = useState(false);
@@ -50,14 +60,15 @@ export function DownloadDialog({
       email: parsed.data.email,
       phone: parsed.data.phone,
       message: parsed.data.message || null,
+      action,
       user_agent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 500) : null,
     });
     setSubmitting(false);
     if (error) {
-      toast.error("Could not record your details. Please try again.");
+      toast.error("Could not submit. Please try again.");
       return;
     }
-    toast.success("Thank you! Preparing your download…");
+    toast.success(action === "download" ? "Thank you! Preparing your download…" : "Thank you!");
     onOpenChange(false);
     setTimeout(onConfirmed, 200);
   };
@@ -66,9 +77,9 @@ export function DownloadDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Download Biodata</DialogTitle>
+          <DialogTitle>{title ?? (action === "download" ? "Download Biodata" : "View Biodata")}</DialogTitle>
           <DialogDescription>
-            Please share a few details before downloading the biodata PDF.
+            {description ?? "Please share a few details to continue."}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-3">
@@ -90,7 +101,7 @@ export function DownloadDialog({
           </div>
           <DialogFooter className="pt-2">
             <Button type="submit" disabled={submitting} className="w-full">
-              {submitting ? "Please wait…" : "Continue & Download"}
+              {submitting ? "Please wait…" : cta ?? (action === "download" ? "Continue & Download" : "View Biodata")}
             </Button>
           </DialogFooter>
         </form>
