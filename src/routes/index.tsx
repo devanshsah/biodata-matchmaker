@@ -15,7 +15,7 @@ export const Route = createFileRoute("/")({
       {
         rel: "icon",
         type: "image/svg+xml",
-        href: "/src/assets/favicon.svg",
+        href: "/favicon.svg",
       },
     ],
   }),
@@ -72,9 +72,6 @@ function Index() {
           <Download className="size-4" />
           Download as PDF
         </Button>
-        <p className="text-xs text-muted-foreground mt-3 tracking-wide">
-          A short form will appear before download.
-        </p>
       </div>
 
       <DownloadDialog
