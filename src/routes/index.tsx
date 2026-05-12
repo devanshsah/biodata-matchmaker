@@ -11,6 +11,13 @@ export const Route = createFileRoute("/")({
     meta: [
       { title: "Devansh Sah" },
     ],
+    links: [
+      {
+        rel: "icon",
+        type: "image/svg+xml",
+        href: "/src/assets/favicon.svg",
+      },
+    ],
   }),
 });
 
