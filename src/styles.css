@@ -8,7 +8,6 @@
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -28,78 +27,66 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-gold: var(--gold);
-  --color-gold-soft: var(--gold-soft);
-  --color-ivory: var(--ivory);
-  --color-maroon: var(--maroon);
+  --color-ink: var(--ink);
+  --color-paper: var(--paper);
+  --color-rule: var(--rule);
   --font-display: var(--font-display);
   --font-serif: var(--font-serif);
-  --shadow-elegant: var(--shadow-elegant);
-  --gradient-bg: var(--gradient-bg);
-  --gradient-gold: var(--gradient-gold);
+  --font-sans: var(--font-sans);
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(0.985 0.012 85);
-  --foreground: oklch(0.25 0.04 35);
-  --card: oklch(0.995 0.008 85);
-  --card-foreground: oklch(0.25 0.04 35);
+  --radius: 0.5rem;
+  --background: oklch(0.985 0.003 80);
+  --foreground: oklch(0.18 0.01 60);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.01 60);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.25 0.04 35);
-  --primary: oklch(0.42 0.13 30);
-  --primary-foreground: oklch(0.98 0.01 85);
-  --secondary: oklch(0.94 0.03 75);
-  --secondary-foreground: oklch(0.3 0.05 35);
-  --muted: oklch(0.95 0.02 80);
-  --muted-foreground: oklch(0.5 0.04 40);
-  --accent: oklch(0.78 0.13 75);
-  --accent-foreground: oklch(0.25 0.04 35);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.98 0.01 85);
-  --border: oklch(0.88 0.04 75);
-  --input: oklch(0.92 0.03 75);
-  --ring: oklch(0.65 0.13 60);
+  --popover-foreground: oklch(0.18 0.01 60);
+  --primary: oklch(0.2 0.01 60);
+  --primary-foreground: oklch(0.98 0.003 80);
+  --secondary: oklch(0.95 0.005 80);
+  --secondary-foreground: oklch(0.2 0.01 60);
+  --muted: oklch(0.95 0.005 80);
+  --muted-foreground: oklch(0.5 0.01 60);
+  --accent: oklch(0.93 0.01 80);
+  --accent-foreground: oklch(0.2 0.01 60);
+  --destructive: oklch(0.55 0.2 27);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0.9 0.005 80);
+  --input: oklch(0.92 0.005 80);
+  --ring: oklch(0.6 0.01 60);
 
-  --gold: oklch(0.72 0.15 75);
-  --gold-soft: oklch(0.88 0.08 80);
-  --ivory: oklch(0.985 0.012 85);
-  --maroon: oklch(0.38 0.14 25);
+  --ink: oklch(0.18 0.01 60);
+  --paper: oklch(0.985 0.003 80);
+  --rule: oklch(0.85 0.01 80);
 
   --font-display: "Cormorant Garamond", "Playfair Display", Georgia, serif;
   --font-serif: "Cormorant Garamond", Georgia, serif;
-
-  --gradient-bg: radial-gradient(ellipse at top, oklch(0.96 0.04 80) 0%, oklch(0.985 0.012 85) 60%);
-  --gradient-gold: linear-gradient(135deg, oklch(0.78 0.15 80), oklch(0.62 0.16 55));
-  --shadow-elegant: 0 20px 60px -15px oklch(0.4 0.1 30 / 0.18), 0 8px 20px -10px oklch(0.4 0.1 30 / 0.12);
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
 @layer base {
   * { border-color: var(--color-border); }
   body {
-    background: var(--gradient-bg);
-    color: var(--color-foreground);
-    font-family: var(--font-serif);
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
+    -webkit-font-smoothing: antialiased;
   }
-  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: 0.01em; }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
 }
 
-/* Decorative ornament divider */
-.ornament {
-  display: flex; align-items: center; justify-content: center; gap: 0.75rem;
-  color: var(--color-gold);
-}
-.ornament::before, .ornament::after {
-  content: ""; height: 1px; flex: 1;
-  background: linear-gradient(90deg, transparent, var(--color-gold), transparent);
-}
-
-/* Print styles for biodata download */
+/* Print: clean A4 page */
 @media print {
-  @page { size: A4; margin: 14mm; }
+  @page { size: A4; margin: 18mm; }
   body { background: white !important; }
   .no-print { display: none !important; }
-  .print-only { display: block !important; }
   .biodata-document {
     box-shadow: none !important;
     border: none !important;
@@ -108,4 +95,3 @@
     max-width: 100% !important;
   }
 }
-.print-only { display: none; }

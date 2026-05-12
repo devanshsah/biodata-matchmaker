@@ -1,118 +1,123 @@
-import omLogo from "@/assets/om-symbol.png";
-
-const sectionTitle = "text-2xl md:text-3xl font-semibold text-[color:var(--maroon)] tracking-wide";
-
-function Row({ label, value }: { label: string; value: React.ReactNode }) {
+function Field({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="grid grid-cols-[160px_1fr] md:grid-cols-[200px_1fr] gap-4 py-2 border-b border-[color:var(--gold-soft)]/60 last:border-0">
-      <div className="text-[color:var(--maroon)] font-semibold uppercase text-xs md:text-sm tracking-widest">
+    <div className="grid grid-cols-[140px_1fr] md:grid-cols-[180px_1fr] gap-x-6 gap-y-1 py-3 border-b border-[color:var(--rule)] last:border-0">
+      <dt className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground pt-1">
         {label}
-      </div>
-      <div className="text-foreground text-base md:text-lg leading-snug">{value}</div>
+      </dt>
+      <dd className="text-[15px] md:text-base text-foreground leading-relaxed">{value}</dd>
     </div>
   );
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="mt-8">
-      <div className="flex items-center gap-3 mb-3">
-        <h2 className={sectionTitle}>{title}</h2>
-      </div>
-      <div className="ornament mb-4" aria-hidden />
-      <div>{children}</div>
+    <section className="mt-10">
+      <h2 className="text-[11px] uppercase tracking-[0.28em] text-muted-foreground mb-3">
+        {title}
+      </h2>
+      <dl>{children}</dl>
     </section>
   );
 }
 
 export function BiodataDocument() {
   return (
-    <article
-      id="biodata-document"
-      className="biodata-document mx-auto bg-card text-card-foreground rounded-2xl shadow-[var(--shadow-elegant)] border border-[color:var(--gold-soft)] px-8 md:px-14 py-10 md:py-14 max-w-3xl"
-    >
-      {/* Header */}
-      <header className="text-center">
-        <div className="flex justify-center mb-3">
-          <img src={omLogo} alt="Jain Om symbol" className="w-14 h-14 opacity-90" />
-        </div>
-        <p className="text-xs md:text-sm tracking-[0.4em] text-[color:var(--gold)] uppercase">
-          ॥ Shri Mahaveeraya Namah ॥
+    <article className="biodata-document mx-auto bg-card text-card-foreground border border-[color:var(--rule)] px-8 md:px-16 py-12 md:py-20 max-w-2xl">
+      <header className="text-center pb-2">
+        <p className="text-[10px] uppercase tracking-[0.4em] text-muted-foreground">
+          Personal Profile
         </p>
-        <h1 className="mt-4 text-4xl md:text-5xl font-bold text-[color:var(--maroon)]">
-          Biodata
+        <h1 className="mt-6 text-5xl md:text-6xl font-serif text-foreground">
+          Devansh Sah
         </h1>
-        <div className="ornament mt-4" aria-hidden />
-        <p className="mt-4 text-2xl md:text-3xl font-semibold">Devansh Sah</p>
+        <p className="mt-4 text-sm text-muted-foreground italic font-serif">
+          Software Engineer · Pune
+        </p>
+        <div className="mx-auto mt-8 h-px w-12 bg-foreground/40" />
       </header>
 
-      <Section title="Personal Details">
-        <Row label="Name" value="Devansh Sah" />
-        <Row label="Date of Birth" value="10 March 1998 · 12:30 AM" />
-        <Row label="Height" value={`5' 9"`} />
-        <Row label="Complexion" value="Fair" />
-        <Row label="Religion" value="Jain" />
-        <Row label="Gotra" value="Self – Sah · Maternal – Kala" />
+      <Section title="Personal">
+        <Field label="Date of Birth" value="10 March 1998 · 12:30 AM" />
+        <Field label="Height" value={`5' 9"`} />
+        <Field label="Complexion" value="Fair" />
+        <Field label="Religion" value="Jain" />
+        <Field label="Gotra" value="Self — Sah · Maternal — Kala" />
       </Section>
 
-      <Section title="Education & Profession">
-        <Row label="Education" value="Computer Science Engineering" />
-        <Row
-          label="Profession"
-          value="Software Engineer at Cellpoint Digital Pvt. Ltd., Pune"
-        />
+      <Section title="Education & Work">
+        <Field label="Education" value="B.E. Computer Science Engineering" />
+        <Field label="Profession" value="Software Engineer" />
+        <Field label="Company" value="Cellpoint Digital Pvt. Ltd., Pune" />
       </Section>
 
-      <Section title="Family Details">
-        <Row
+      <Section title="Family">
+        <Field
           label="Father"
-          value="Shri Rajeev Kumar Sah — Businessman, Devrishi Enterprises, Jaipur"
+          value={
+            <>
+              Rajeev Kumar Sah
+              <span className="block text-sm text-muted-foreground">
+                Businessman · Devrishi Enterprises, Jaipur
+              </span>
+            </>
+          }
         />
-        <Row
+        <Field
           label="Mother"
-          value="Smt. Ritu Sah — Ex Jewellery Designer, Homemaker"
+          value={
+            <>
+              Ritu Sah
+              <span className="block text-sm text-muted-foreground">
+                Homemaker · Ex Jewellery Designer
+              </span>
+            </>
+          }
         />
-        <Row
+        <Field
           label="Brother"
-          value="Shri Rishi Sah — Mechanical Engineer, Assembly Line Manager at Mercedes Benz India Pvt. Ltd., Pune"
+          value={
+            <>
+              Rishi Sah
+              <span className="block text-sm text-muted-foreground">
+                Mechanical Engineer · Assembly Line Manager, Mercedes Benz India, Pune
+              </span>
+            </>
+          }
         />
-        <Row
-          label="Paternal Grandfather"
-          value="Late Shri Prem Chand Sah — Rtd. Director Marketing, Rajshri Production Pvt. Ltd."
+        <Field
+          label="Paternal Grandparents"
+          value={
+            <>
+              Late Shri Prem Chand Sah
+              <span className="block text-sm text-muted-foreground">
+                Rtd. Director Marketing, Rajshri Production Pvt. Ltd.
+              </span>
+              <span className="block mt-1">Smt. Pushpa Lata Sah</span>
+            </>
+          }
         />
-        <Row
-          label="Paternal Grandmother"
-          value="Smt. Pushpa Lata Sah — Homemaker"
+        <Field
+          label="Maternal Grandparents"
+          value={
+            <>
+              Late Shri Kamal Chand Kala
+              <span className="block text-sm text-muted-foreground">
+                Rtd. Superintendent, Dept. of Finance Ministry, Rajasthan
+              </span>
+              <span className="block mt-1">Smt. Sushila Devi Kala</span>
+            </>
+          }
         />
-        <Row
-          label="Maternal Grandfather"
-          value="Late Shri Kamal Chand Kala — Rtd. Superintendent, Dept. of Finance Ministry, Rajasthan"
-        />
-        <Row
-          label="Maternal Grandmother"
-          value="Smt. Sushila Devi Kala — Homemaker"
-        />
-        <Row
+        <Field
           label="Uncles"
-          value="Shri Dinesh Kumar Sah (Jaipur) · Shri Sanjay Kumar Sah (Indore)"
+          value="Dinesh Kumar Sah (Jaipur) · Sanjay Kumar Sah (Indore)"
         />
-        <Row label="Assistant" value="Smt. Sangeeta Devi (Lady Helper)" />
       </Section>
 
       <Section title="Contact">
-        <Row
-          label="Address"
-          value="B-39, Sangam Vihar, Bani Park, Jaipur – 302016"
-        />
-        <Row label="Mobile" value="+91 73400 07777 · +91 73740 97655" />
+        <Field label="Address" value="B-39, Sangam Vihar, Bani Park, Jaipur — 302016" />
+        <Field label="Mobile" value="+91 73400 07777 · +91 73740 97655" />
       </Section>
-
-      <footer className="mt-10 text-center">
-        <div className="ornament mb-3" aria-hidden />
-        <p className="text-xs tracking-[0.3em] uppercase text-[color:var(--gold)]">
-          With Blessings of Elders
-        </p>
-      </footer>
     </article>
   );
 }
