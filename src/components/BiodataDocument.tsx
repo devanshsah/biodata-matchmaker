@@ -114,66 +114,6 @@ export function BiodataDocument() {
         />
       </Section>
 
-          value={
-            <>
-              Rajeev Kumar Sah
-              <span className="block text-sm text-muted-foreground">
-                Businessman · Devrishi Enterprises, Jaipur
-              </span>
-            </>
-          }
-        />
-        <Field
-          label="Mother"
-          value={
-            <>
-              Ritu Sah
-              <span className="block text-sm text-muted-foreground">
-                Homemaker · Ex Jewellery Designer
-              </span>
-            </>
-          }
-        />
-        <Field
-          label="Brother"
-          value={
-            <>
-              Rishi Sah
-              <span className="block text-sm text-muted-foreground">
-                Mechanical Engineer · Assembly Line Manager, Mercedes Benz India, Pune
-              </span>
-            </>
-          }
-        />
-        <Field
-          label="Paternal Grandparents"
-          value={
-            <>
-              Late Shri Prem Chand Sah
-              <span className="block text-sm text-muted-foreground">
-                Rtd. Director Marketing, Rajshri Production Pvt. Ltd.
-              </span>
-              <span className="block mt-1">Smt. Pushpa Lata Sah</span>
-            </>
-          }
-        />
-        <Field
-          label="Maternal Grandparents"
-          value={
-            <>
-              Late Shri Kamal Chand Kala
-              <span className="block text-sm text-muted-foreground">
-                Rtd. Superintendent, Dept. of Finance Ministry, Rajasthan
-              </span>
-              <span className="block mt-1">Smt. Sushila Devi Kala</span>
-            </>
-          }
-        />
-        <Field
-          label="Uncles"
-          value="Dinesh Kumar Sah (Jaipur) · Sanjay Kumar Sah (Indore)"
-        />
-      </Section>
 
       <Section title="Contact">
         <Field label="Address" value="B-39, Sangam Vihar, Bani Park, Jaipur — 302016" />
