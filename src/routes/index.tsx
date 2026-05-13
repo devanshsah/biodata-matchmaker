@@ -1,21 +1,21 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowUpRight, Mail, Phone, Github, Sparkles, Zap, Shield, Cpu } from "lucide-react";
+import { createFileRoute } from "@tanstack/react-router";
+import { ArrowUpRight, Mail, Phone, Github, Sparkles, Zap, Layers, Cpu } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   component: Landing,
   head: () => ({
     meta: [
-      { title: "Devansh Sah — Senior Software Engineer" },
+      { title: "Devansh Sah — Full-Stack Software Engineer" },
       {
         name: "description",
         content:
-          "Senior Backend Engineer building high-availability payment & fraud systems at scale. 10M+ txns/month, sub-50ms APIs.",
+          "Full-stack engineer with 6+ years shipping web apps, APIs, and platforms end-to-end. Open to all kinds of work — frontend, backend, systems, MVPs.",
       },
-      { property: "og:title", content: "Devansh Sah — Senior Software Engineer" },
+      { property: "og:title", content: "Devansh Sah — Full-Stack Software Engineer" },
       {
         property: "og:description",
         content:
-          "Backend, distributed systems, payments. 6+ years shipping platforms that scale.",
+          "Frontend, backend, distributed systems. 6+ years shipping things that scale.",
       },
     ],
     links: [{ rel: "icon", type: "image/svg+xml", href: "/favicon.svg" }],
@@ -23,16 +23,16 @@ export const Route = createFileRoute("/")({
 });
 
 const skills = [
-  { icon: Cpu, label: "Java · TypeScript · SQL" },
-  { icon: Zap, label: "Spring Boot · Microservices" },
-  { icon: Shield, label: "PCI DSS · Tokenization" },
+  { icon: Layers, label: "React · Next.js · TypeScript" },
+  { icon: Cpu, label: "Java · Spring Boot · Node" },
+  { icon: Zap, label: "REST APIs · Microservices" },
   { icon: Sparkles, label: "Kafka · Docker · K8s · GCP" },
 ];
 
 const stats = [
+  { k: "6+ yrs", v: "shipping software" },
   { k: "10M+", v: "monthly transactions" },
-  { k: "100K+", v: "concurrent txns" },
-  { k: "98.9%", v: "fraud accuracy" },
+  { k: "100K+", v: "concurrent users" },
   { k: "<50ms", v: "API latency" },
 ];
 
@@ -42,10 +42,10 @@ const experience = [
     role: "Software Engineer",
     when: "Jan 2022 — Present",
     bullets: [
-      "Owned end-to-end payment orchestration: PSP routing, split payments, refunds, callbacks, PayPal in-context.",
-      "Designed extensible orchestration integrating PayPal, Chase, Amex, Airwallex + fraud providers (Cybersource, Riskified, Accertify).",
-      "Architected fraud rule-engine hitting 98.9% accuracy while reducing false declines.",
-      "Led settlement pipeline upgrades reliably processing 100K+ concurrent transactions.",
+      "Owned end-to-end orchestration platforms — routing, split flows, refunds, callbacks, third-party SDKs.",
+      "Designed extensible architectures integrating multiple providers and fraud engines.",
+      "Built rule-engines hitting 98.9% accuracy, reducing false declines.",
+      "Led pipeline upgrades reliably processing 100K+ concurrent transactions.",
       "Tuned services & queries to sub-50ms response times on critical APIs.",
     ],
   },
@@ -79,24 +79,15 @@ function Landing() {
           devansh.sah
         </div>
         <nav className="flex items-center gap-1 text-sm">
-          <a
-            href="#work"
-            className="px-3 py-1.5 rounded-full hover:bg-white/60 transition"
-          >
+          <a href="#work" className="px-3 py-1.5 rounded-full hover:bg-white/60 transition">
             work
           </a>
           <a
             href="#contact"
-            className="px-3 py-1.5 rounded-full hover:bg-white/60 transition"
+            className="px-3 py-1.5 rounded-full bg-slate-900 text-white hover:bg-slate-700 transition"
           >
             contact
           </a>
-          <Link
-            to="/biodata"
-            className="px-3 py-1.5 rounded-full bg-slate-900 text-white hover:bg-slate-700 transition"
-          >
-            biodata
-          </Link>
         </nav>
       </header>
 
@@ -104,37 +95,37 @@ function Landing() {
       <section className="max-w-6xl mx-auto px-6 pt-16 pb-20">
         <div className="inline-flex items-center gap-2 text-xs font-medium px-3 py-1 rounded-full bg-white/70 backdrop-blur border border-white shadow-sm">
           <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          open to senior backend / platform roles
+          open to full-time, freelance & cool side projects
         </div>
         <h1 className="mt-6 text-5xl md:text-7xl font-semibold tracking-tight leading-[1.05]">
-          building payment rails
+          full-stack engineer
           <br />
-          that just{" "}
+          shipping things that{" "}
           <span className="bg-gradient-to-r from-sky-500 via-fuchsia-500 to-amber-500 bg-clip-text text-transparent">
-            don't break
+            actually work
           </span>
           .
         </h1>
         <p className="mt-6 max-w-2xl text-lg text-slate-600">
-          I'm Devansh — a senior software engineer with 6+ years architecting
-          high-availability payment and fraud systems. Distributed systems,
-          orchestration engines, and APIs that stay fast under load.
+          I'm Devansh — a software engineer with 6+ years building web apps,
+          APIs, and platforms end-to-end. Frontend, backend, distributed
+          systems, MVPs from zero — happy to take on whatever you're building.
         </p>
 
         <div className="mt-8 flex flex-wrap gap-3">
           <a
-            href="mailto:sah.devansh@gmail.com"
+            href="mailto:seehdev@gmail.com"
             className="group inline-flex items-center gap-2 rounded-full bg-slate-900 text-white px-5 py-3 text-sm font-medium hover:bg-slate-700 transition"
           >
             let's talk
             <ArrowUpRight className="size-4 group-hover:rotate-45 transition-transform" />
           </a>
-          <Link
-            to="/biodata"
+          <a
+            href="#work"
             className="inline-flex items-center gap-2 rounded-full bg-white/80 backdrop-blur border border-white px-5 py-3 text-sm font-medium hover:bg-white transition shadow-sm"
           >
-            view biodata
-          </Link>
+            see my work
+          </a>
         </div>
 
         {/* stats */}
@@ -237,18 +228,18 @@ function Landing() {
       <section id="contact" className="max-w-6xl mx-auto px-6 pb-24">
         <div className="rounded-3xl p-8 md:p-12 bg-gradient-to-br from-sky-100 via-fuchsia-100 to-amber-100 border border-white shadow-sm">
           <h2 className="text-3xl md:text-5xl font-semibold tracking-tight max-w-2xl">
-            got a hard backend problem?
+            got something to build?
           </h2>
           <p className="mt-3 text-slate-700 max-w-xl">
-            DMs are open. Payments, orchestration, distributed systems — happy
-            to chat.
+            DMs are open. Frontend, backend, full-stack, MVPs, weird ideas —
+            happy to chat.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <a
-              href="mailto:sah.devansh@gmail.com"
+              href="mailto:seehdev@gmail.com"
               className="inline-flex items-center gap-2 rounded-full bg-slate-900 text-white px-5 py-3 text-sm font-medium hover:bg-slate-700 transition"
             >
-              <Mail className="size-4" /> sah.devansh@gmail.com
+              <Mail className="size-4" /> seehdev@gmail.com
             </a>
             <a
               href="tel:+918302879298"
