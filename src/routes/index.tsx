@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowUpRight, Mail, Phone, Github, Sparkles, Zap, Layers, Cpu } from "lucide-react";
+import { ArrowUpRight, Mail, Phone, Github, Sparkles, Zap, Layers, Cpu, Linkedin } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   component: Landing,
@@ -31,9 +31,6 @@ const skills = [
 
 const stats = [
   { k: "6+ yrs", v: "shipping software" },
-  { k: "10M+", v: "monthly transactions" },
-  { k: "100K+", v: "concurrent users" },
-  { k: "<50ms", v: "API latency" },
 ];
 
 const experience = [
@@ -76,7 +73,7 @@ function Landing() {
       <header className="max-w-6xl mx-auto px-6 pt-6 flex items-center justify-between">
         <div className="flex items-center gap-2 font-semibold tracking-tight">
           <span className="inline-block size-2.5 rounded-full bg-gradient-to-tr from-sky-400 to-fuchsia-400" />
-          devansh.sah
+          devansh/sah
         </div>
         <nav className="flex items-center gap-1 text-sm">
           <a href="#work" className="px-3 py-1.5 rounded-full hover:bg-white/60 transition">
@@ -95,7 +92,7 @@ function Landing() {
       <section className="max-w-6xl mx-auto px-6 pt-16 pb-20">
         <div className="inline-flex items-center gap-2 text-xs font-medium px-3 py-1 rounded-full bg-white/70 backdrop-blur border border-white shadow-sm">
           <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          open to full-time, freelance & cool side projects
+          open for cool side projects
         </div>
         <h1 className="mt-6 text-5xl md:text-7xl font-semibold tracking-tight leading-[1.05]">
           full-stack engineer
@@ -236,24 +233,12 @@ function Landing() {
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <a
-              href="mailto:seehdev@gmail.com"
-              className="inline-flex items-center gap-2 rounded-full bg-slate-900 text-white px-5 py-3 text-sm font-medium hover:bg-slate-700 transition"
-            >
-              <Mail className="size-4" /> seehdev@gmail.com
-            </a>
-            <a
-              href="tel:+918302879298"
-              className="inline-flex items-center gap-2 rounded-full bg-white/80 backdrop-blur border border-white px-5 py-3 text-sm font-medium hover:bg-white transition"
-            >
-              <Phone className="size-4" /> +91 8302879298
-            </a>
-            <a
-              href="https://github.com/devanshsah"
+              href="https://www.linkedin.com/in/devanshsah/"
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-2 rounded-full bg-white/80 backdrop-blur border border-white px-5 py-3 text-sm font-medium hover:bg-white transition"
             >
-              <Github className="size-4" /> /devanshsah
+              <Linkedin className="size-4" /> /devanshsah
             </a>
           </div>
         </div>
@@ -261,7 +246,6 @@ function Landing() {
 
       <footer className="max-w-6xl mx-auto px-6 pb-10 text-xs text-slate-500 flex justify-between">
         <span>© {new Date().getFullYear()} Devansh Sah</span>
-        <span>made with ☕ in Pune</span>
       </footer>
     </div>
   );
