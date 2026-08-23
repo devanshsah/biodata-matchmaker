@@ -51,7 +51,7 @@ const openTo = [
 function AboutNowPage() {
   return (
     <div
-      className="min-h-screen text-breeze-text"
+      className="breeze-page min-h-screen text-breeze-text"
       style={{
         background:
           "radial-gradient(60% 50% at 10% 20%, #e0f2fe 0%, transparent 60%), radial-gradient(50% 40% at 90% 80%, #fef9c3 0%, transparent 60%), radial-gradient(60% 50% at 50% 0%, #f0f9ff 0%, transparent 60%), #f8fbff",
