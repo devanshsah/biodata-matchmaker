@@ -134,7 +134,7 @@ function AboutNowPage() {
                   <Briefcase className="size-5 text-breeze-sky-deep" />
                 </div>
                 <h2
-                  className="text-xl font-semibold tracking-tight"
+                  className="text-xl font-semibold tracking-tight text-breeze-text"
                   style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                 >
                   right now
@@ -155,7 +155,7 @@ function AboutNowPage() {
                   <Code2 className="size-5 text-breeze-text" />
                 </div>
                 <h2
-                  className="text-xl font-semibold tracking-tight"
+                  className="text-xl font-semibold tracking-tight text-breeze-text"
                   style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                 >
                   building things with
@@ -180,7 +180,7 @@ function AboutNowPage() {
                   <Coffee className="size-5 text-breeze-sky-deep" />
                 </div>
                 <h2
-                  className="text-xl font-semibold tracking-tight"
+                  className="text-xl font-semibold tracking-tight text-breeze-text"
                   style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                 >
                   open to
@@ -198,7 +198,7 @@ function AboutNowPage() {
 
             <section className="rounded-3xl p-6 md:p-8 bg-gradient-to-br from-breeze-sky/30 via-breeze-sand/40 to-breeze-sky/20 border border-breeze-border shadow-sm">
               <h2
-                className="text-xl font-semibold tracking-tight"
+                className="text-xl font-semibold tracking-tight text-breeze-text"
                 style={{ fontFamily: "'Space Grotesk', sans-serif" }}
               >
                 want to build something together?
