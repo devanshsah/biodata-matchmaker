@@ -100,6 +100,17 @@
   --shadow-elegant: 0 30px 60px -30px color-mix(in oklab, var(--maroon) 30%, transparent);
 }
 
+/* Breezy page override: reset the matrimonial heading theme for hidden pages */
+.breeze-page h1,
+.breeze-page h2,
+.breeze-page h3,
+.breeze-page h4,
+.breeze-page h5,
+.breeze-page h6 {
+  color: var(--breeze-text);
+  font-family: var(--font-breeze-display);
+}
+
 @layer base {
   * { border-color: var(--color-border); }
   body {
