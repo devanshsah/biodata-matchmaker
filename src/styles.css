@@ -32,6 +32,17 @@
   --color-gold-deep: var(--gold-deep);
   --color-maroon: var(--maroon);
   --color-rule: var(--rule);
+  --font-breeze-display: var(--font-breeze-display);
+  --font-breeze-sans: var(--font-breeze-sans);
+  --color-breeze-bg: var(--breeze-bg);
+  --color-breeze-surface: var(--breeze-surface);
+  --color-breeze-sky: var(--breeze-sky);
+  --color-breeze-sky-deep: var(--breeze-sky-deep);
+  --color-breeze-sand: var(--breeze-sand);
+  --color-breeze-text: var(--breeze-text);
+  --color-breeze-muted: var(--breeze-muted);
+  --color-breeze-border: var(--breeze-border);
+  --color-breeze-soft: var(--breeze-soft);
   --font-display: var(--font-display);
   --font-serif: var(--font-serif);
   --font-sans: var(--font-sans);
