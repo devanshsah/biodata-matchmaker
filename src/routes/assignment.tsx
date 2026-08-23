@@ -79,7 +79,7 @@ function AboutNowPage() {
             </div>
 
             <h1
-              className="mt-6 text-5xl md:text-6xl lg:text-7xl font-semibold leading-[1.05] tracking-tight"
+              className="mt-6 text-5xl md:text-6xl lg:text-7xl font-semibold leading-[1.05] tracking-tight text-breeze-text"
               style={{ fontFamily: "'Space Grotesk', sans-serif" }}
             >
               hey, I’m
