@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as BiodataRouteImport } from './routes/biodata'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AssignmentRouteImport } from './routes/assignment'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 
@@ -22,6 +23,11 @@ const BiodataRoute = BiodataRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AssignmentRoute = AssignmentRouteImport.update({
+  id: '/assignment',
+  path: '/assignment',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -38,12 +44,14 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/assignment': typeof AssignmentRoute
   '/auth': typeof AuthRoute
   '/biodata': typeof BiodataRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/assignment': typeof AssignmentRoute
   '/auth': typeof AuthRoute
   '/biodata': typeof BiodataRoute
 }
@@ -51,20 +59,22 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/assignment': typeof AssignmentRoute
   '/auth': typeof AuthRoute
   '/biodata': typeof BiodataRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/auth' | '/biodata'
+  fullPaths: '/' | '/admin' | '/assignment' | '/auth' | '/biodata'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/auth' | '/biodata'
-  id: '__root__' | '/' | '/admin' | '/auth' | '/biodata'
+  to: '/' | '/admin' | '/assignment' | '/auth' | '/biodata'
+  id: '__root__' | '/' | '/admin' | '/assignment' | '/auth' | '/biodata'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  AssignmentRoute: typeof AssignmentRoute
   AuthRoute: typeof AuthRoute
   BiodataRoute: typeof BiodataRoute
 }
@@ -83,6 +93,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/assignment': {
+      id: '/assignment'
+      path: '/assignment'
+      fullPath: '/assignment'
+      preLoaderRoute: typeof AssignmentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -105,6 +122,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  AssignmentRoute: AssignmentRoute,
   AuthRoute: AuthRoute,
   BiodataRoute: BiodataRoute,
 }
