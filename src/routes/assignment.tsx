@@ -225,7 +225,3 @@ function AboutNowPage() {
     </div>
   );
 }
-
-function AboutNowPage() {
-  return <AboutNowPage />;
-}
