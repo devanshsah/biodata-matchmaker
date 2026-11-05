@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { Activity, CalendarClock, SlidersHorizontal, UtensilsCrossed } from "lucide-react";
 import * as P from "./plan.js";
 import "./fit.css";
+import StoryShare, { storyStats } from "./StoryShare";
 
 const { plan, setOVR, getOVR, applyOVR, ist, iso, addDays, keyOf, fmtT, fmtD, START, WEEKS, KEYS, NAME, SHORT, GYM, WARM, STUDY, MENU, DEF, clone, weekOf, phaseOf, SHOP } = P;
 
@@ -33,6 +34,7 @@ export default function FitApp() {
   const [sel, setSel] = useState(clampDay(ist().date));
   const [tab, setTab] = useState("train");
   const [jump, setJump] = useState(0);
+  const [storyOpen, setStoryOpen] = useState(false);
   const ticksRef = useRef(ticks);
   ticksRef.current = ticks;
 
@@ -179,7 +181,7 @@ export default function FitApp() {
       <TopBar now={now} streak={streakOf(ticks, today)} />
       <div className="wrap">
         {err && <div className="note">{err}</div>}
-        {ready && <Board today={today} now={now} done={ticks[iso(today)] || {}} onGoNow={goNow} />}
+        {ready && <Board today={today} now={now} done={ticks[iso(today)] || {}} onGoNow={goNow} onShare={() => setStoryOpen(true)} />}
         {ready && <DayStrip sel={sel} setSel={setSel} today={today} ticks={ticks} />}
         {ready && (
           <>
@@ -191,6 +193,10 @@ export default function FitApp() {
         )}
       </div>
       <BottomNav tab={tab} setTab={setTab} />
+      {storyOpen && today >= FIRST && today <= LAST && (
+        <StoryShare open onClose={() => setStoryOpen(false)} today={today}
+          stats={storyStats({ today, now, done: ticks[iso(today)] || {}, streak: streakOf(ticks, today), scans, kg, isDoneItem })} />
+      )}
     </div>
   );
 }
@@ -333,7 +339,7 @@ function TopBar({ now, streak }) {
 }
 
 /* ---------------- departures board (hero) ---------------- */
-function Board({ today, now, done, onGoNow }) {
+function Board({ today, now, done, onGoNow, onShare }) {
   if (today < FIRST || today > LAST) {
     return (
       <section className="board">
@@ -380,7 +386,10 @@ function Board({ today, now, done, onGoNow }) {
           <i style={{ width: `${Math.round(sc.pct * 100)}%` }} />
         </div>
         <span className="mono">{sc.got}/{sc.total} DEPARTED · {Math.round(sc.pct * 100)}%</span>
-        <button className="gonow" onClick={onGoNow}>Jump to now</button>
+        <div className="board-btns">
+          <button className="gonow share" onClick={onShare}>Share story</button>
+          <button className="gonow" onClick={onGoNow}>Jump to now</button>
+        </div>
       </div>
       {sc.pct >= 1 && <div className="allclear"><Flap text="ALL DEPARTED" tone="green" /></div>}
     </section>
