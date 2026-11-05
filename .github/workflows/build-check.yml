@@ -1,0 +1,17 @@
+# Builds the full Docker image (frontend + Java backend) on pull requests and branch pushes,
+# so a broken build shows up before anything is deployed.
+name: Build check
+
+on:
+  pull_request:
+  push:
+    branches-ignore: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t devanshs-page:check .

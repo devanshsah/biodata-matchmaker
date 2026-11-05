@@ -1,0 +1,125 @@
+# Builds the Docker image and deploys it to Google Cloud Run, then makes sure
+# the Cloud Scheduler job that sends reminders exists. Runs on every push to main, or by hand
+# from the Actions tab (pick any branch).
+#
+# GitHub secrets needed (Settings → Secrets and variables → Actions):
+#   GCP_PROJECT_ID, GCP_SA_KEY          from deploy/gcp-setup.sh
+#   DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD   from Neon
+#   CRON_KEY                            from deploy/gcp-setup.sh
+#   VAPID_SUBJECT                       e.g. mailto:you@example.com
+#   ANTHROPIC_API_KEY                   optional, for reading scan photos
+
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+env:
+  # Set by deploy/gcp-setup.sh as a repo variable. us-central1 (Iowa) is the fully free choice.
+  REGION: ${{ vars.GCP_REGION || 'us-central1' }}
+  SERVICE: devanshs-page
+  REPO: devanshs-page
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check secrets
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CRON_KEY: ${{ secrets.CRON_KEY }}
+        run: |
+          missing=""
+          for v in GCP_PROJECT_ID GCP_SA_KEY DATABASE_URL CRON_KEY; do
+            [ -z "${!v}" ] && missing="$missing $v"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Missing GitHub secrets:$missing. See README → Host it for free."
+            exit 1
+          fi
+
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Build and push image
+        run: |
+          IMAGE="${REGION}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${REPO}/app:${GITHUB_SHA::12}"
+          gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
+          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
+
+      - name: Write runtime settings
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_USER: ${{ secrets.DATABASE_USER }}
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+          CRON_KEY: ${{ secrets.CRON_KEY }}
+          VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          # JSON is valid YAML, and jq handles any quoting in the values
+          jq -n \
+            --arg DATABASE_URL "$DATABASE_URL" \
+            --arg DATABASE_USER "$DATABASE_USER" \
+            --arg DATABASE_PASSWORD "$DATABASE_PASSWORD" \
+            --arg CRON_KEY "$CRON_KEY" \
+            --arg VAPID_SUBJECT "${VAPID_SUBJECT:-mailto:you@example.com}" \
+            --arg ANTHROPIC_API_KEY "$ANTHROPIC_API_KEY" \
+            '{DATABASE_URL:$DATABASE_URL, DATABASE_USER:$DATABASE_USER, DATABASE_PASSWORD:$DATABASE_PASSWORD,
+              CRON_KEY:$CRON_KEY, VAPID_SUBJECT:$VAPID_SUBJECT, ANTHROPIC_API_KEY:$ANTHROPIC_API_KEY}' > "$RUNNER_TEMP/env.yaml"
+
+      - name: Deploy to Cloud Run
+        run: |
+          # Scales to zero when unused; one small instance max keeps it inside the free tier.
+          gcloud run deploy "$SERVICE" \
+            --project "${{ secrets.GCP_PROJECT_ID }}" \
+            --region "$REGION" \
+            --image "$IMAGE" \
+            --port 8080 \
+            --memory 1Gi --cpu 1 \
+            --min-instances 0 --max-instances 1 \
+            --concurrency 40 \
+            --cpu-boost \
+            --timeout 300 \
+            --allow-unauthenticated \
+            --env-vars-file "$RUNNER_TEMP/env.yaml" \
+            --quiet
+          URL=$(gcloud run services describe "$SERVICE" --project "${{ secrets.GCP_PROJECT_ID }}" --region "$REGION" --format 'value(status.url)')
+          echo "URL=$URL" >> "$GITHUB_ENV"
+          echo "### Deployed: $URL" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Reminder schedule (every 2 minutes)
+        env:
+          CRON_KEY: ${{ secrets.CRON_KEY }}
+        run: |
+          P="${{ secrets.GCP_PROJECT_ID }}"
+          ARGS=(--project "$P" --location "$REGION" --schedule "*/2 * * * *" --time-zone "Asia/Kolkata"
+                --uri "$URL/api/internal/reminders/tick" --http-method POST --attempt-deadline 120s)
+          if gcloud scheduler jobs describe devanshs-page-reminders --project "$P" --location "$REGION" > /dev/null 2>&1; then
+            gcloud scheduler jobs update http devanshs-page-reminders "${ARGS[@]}" --update-headers "X-Cron-Key=$CRON_KEY" --quiet
+          else
+            gcloud scheduler jobs create http devanshs-page-reminders "${ARGS[@]}" --headers "X-Cron-Key=$CRON_KEY" --quiet
+          fi
+
+      - name: Smoke test
+        run: |
+          for i in $(seq 1 20); do
+            if curl -fsS "$URL/api/health" > /dev/null; then echo "Healthy: $URL"; exit 0; fi
+            sleep 6
+          done
+          echo "::error::$URL/api/health did not respond"; exit 1

@@ -1,1 +1,0 @@
-ALTER TABLE public.downloads ADD COLUMN IF NOT EXISTS action text NOT NULL DEFAULT 'view';
