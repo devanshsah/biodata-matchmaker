@@ -3,7 +3,7 @@
 // Dark only. Every tick, weight, edit and scan is saved to PostgreSQL through /api/fit.
 import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
-import { Activity, CalendarClock, SlidersHorizontal, UtensilsCrossed } from "lucide-react";
+import { Activity, CalendarClock, Dumbbell, SlidersHorizontal, UtensilsCrossed } from "lucide-react";
 import * as P from "./plan.js";
 import "./fit.css";
 import StoryShare, { storyStats } from "./StoryShare";
@@ -32,7 +32,7 @@ export default function FitApp() {
   const [vapid, setVapid] = useState("");
   const [now, setNow] = useState(ist());
   const [sel, setSel] = useState(clampDay(ist().date));
-  const [tab, setTab] = useState("train");
+  const [tab, setTab] = useState("today");
   const [jump, setJump] = useState(0);
   const [storyOpen, setStoryOpen] = useState(false);
   const ticksRef = useRef(ticks);
@@ -41,14 +41,14 @@ export default function FitApp() {
   // Dark page background while the planner is open
   useEffect(() => {
     const b = document.body.style.background, c = document.documentElement.style.colorScheme;
-    document.body.style.background = "#0E0F11";
+    document.body.style.background = "#120F16";
     document.documentElement.style.colorScheme = "dark";
     const meta = document.createElement("meta");
-    meta.name = "theme-color"; meta.content = "#0E0F11";
+    meta.name = "theme-color"; meta.content = "#120F16";
     document.head.appendChild(meta);
     const link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = "https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap";
+    link.href = "https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap";
     document.head.appendChild(link);
     const man = document.createElement("link");
     man.rel = "manifest"; man.href = "/fit-assets/manifest.webmanifest";
@@ -77,7 +77,7 @@ export default function FitApp() {
     const p = plan(n.date);
     const cur = p.all.filter((y) => y.m <= n.min).pop() || p.all[0];
     setSel(n.date);
-    setTab(p.train.includes(cur) ? "train" : "meals");
+    setTab("today");
     setJump((j) => j + 1);
   }, []);
 
@@ -137,7 +137,7 @@ export default function FitApp() {
     if (!jump) return;
     requestAnimationFrame(() => {
       const v = document.querySelector(".fit main:not([hidden])");
-      const el = v && (v.querySelector(".slot.st-boarding") || v.querySelector(".slot.st-next"));
+      const el = v && (v.querySelector(".slot.st-now") || v.querySelector(".slot.st-late") || v.querySelector(".slot.st-next"));
       if (el) el.scrollIntoView({ block: "center", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
     });
   }, [jump, tab]);
@@ -168,9 +168,9 @@ export default function FitApp() {
   const reloadScans = useCallback(async () => setScans(await api("GET", "/api/fit/scans")), []);
   useLiveFavicon(now, ticks, ready);
 
-  if (me === undefined) return <div className="fit"><div className="boot"><Flap text="LOADING" /></div></div>;
+  if (me === undefined) return <div className="fit"><div className="boot"><span className="sticker">loading…</span></div></div>;
   if (me === null) return <Login onIn={(m) => setMe(m)} />;
-  if (me.role !== "admin") return <div className="fit"><div className="boot"><Flap text="NO ACCESS" /><p>This account can’t open the planner.</p></div></div>;
+  if (me.role !== "admin") return <div className="fit"><div className="boot"><span className="sticker">nope</span><p>This account can’t open the planner.</p></div></div>;
 
   const today = now.date;
   const selDone = ticks[iso(sel)] || {};
@@ -181,11 +181,12 @@ export default function FitApp() {
       <TopBar now={now} streak={streakOf(ticks, today)} />
       <div className="wrap">
         {err && <div className="note">{err}</div>}
-        {ready && <Board today={today} now={now} done={ticks[iso(today)] || {}} onGoNow={goNow} onShare={() => setStoryOpen(true)} />}
+        {ready && <NowCard today={today} now={now} done={ticks[iso(today)] || {}} onGoNow={goNow} onShare={() => setStoryOpen(true)} />}
         {ready && <DayStrip sel={sel} setSel={setSel} today={today} ticks={ticks} />}
         {ready && (
           <>
-            <main hidden={tab !== "train"}>{tab === "train" && <DayPlan {...common} done={selDone} toggle={toggleTick} clear={clearTicks} kg={kg} setKg={setKg} />}</main>
+            <main hidden={tab !== "today"}>{tab === "today" && <Today {...common} done={selDone} toggle={toggleTick} kg={kg} setKg={setKg} openGym={() => { setTab("gym"); window.scrollTo({ top: 0 }); }} />}</main>
+            <main hidden={tab !== "gym"}>{tab === "gym" && <Gym {...common} done={selDone} toggle={toggleTick} clear={clearTicks} kg={kg} setKg={setKg} />}</main>
             <main hidden={tab !== "meals"}>{tab === "meals" && <Meals {...common} done={selDone} toggle={toggleTick} />}</main>
             <main hidden={tab !== "prog"}>{tab === "prog" && <Progress scans={scans} aiRead={aiRead} reload={reloadScans} today={today} />}</main>
             <main hidden={tab !== "edit"}>{tab === "edit" && <Edit sel={sel} ver={ver} saveOVR={saveOVR} vapid={vapid} />}</main>
@@ -205,16 +206,14 @@ export default function FitApp() {
    The tab icon is a split-flap "D" with a status light: amber = something boarding now,
    red (blinking) = you're running late, green = everything due so far is done.
    The tab title shows what's boarding, e.g. "▶ LUNCH · DEVANSH.OS". */
-const LED = { amber: "#FFB224", red: "#FF5A4E", green: "#3DD68C", grey: "#5B6169" };
+const LED = { amber: "#FFE15A", red: "#FF5A5A", green: "#5CE59B", grey: "#5B5466" };
 function faviconSvg(led, on) {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-<rect x="2" y="2" width="60" height="60" rx="14" fill="#0E0F11"/>
-<rect x="10" y="9" width="38" height="47" rx="6" fill="#1C1D21"/>
-<rect x="10" y="9" width="38" height="23" rx="6" fill="#24262B" transform="rotate(-6 29 32)"/>
-<text x="29" y="47" text-anchor="middle" font-family="Menlo,Consolas,monospace" font-weight="700" font-size="34" fill="#FFB224">D</text>
-<rect x="10" y="31" width="38" height="2.5" fill="#050506"/>
-<circle cx="51" cy="13" r="11" fill="#0E0F11"/>
-<circle cx="51" cy="13" r="8" fill="${on ? led : "#2A2C31"}"/>
+<rect x="3" y="5" width="56" height="56" rx="16" fill="#FFE15A"/>
+<rect x="1" y="2" width="56" height="56" rx="16" fill="#FF4FA3"/>
+<text x="29" y="46" text-anchor="middle" font-family="Arial Rounded MT Bold,Arial,sans-serif" font-weight="900" font-size="40" fill="#120F16" transform="rotate(-8 29 32)">d</text>
+<circle cx="52" cy="12" r="11" fill="#120F16"/>
+<circle cx="52" cy="12" r="7.5" fill="${on ? led : "#3A3343"}"/>
 </svg>`;
 }
 function useLiveFavicon(now, ticks, ready) {
@@ -274,24 +273,49 @@ function streakOf(ticks, today) {
   return n;
 }
 
-/* ---------------- split-flap text ---------------- */
-function Flap({ text, tone = "amber", max = 22 }) {
-  const words = String(text || "").toUpperCase().slice(0, max).split(" ").filter(Boolean);
-  let n = 0;
-  return (
-    <span className={`flap tone-${tone}`} aria-label={text}>
-      {words.map((w, wi) => (
-        <span key={`${wi}-${w}`} className="word" aria-hidden="true">
-          {w.split("").map((c) => {
-            const k = n++;
-            return <span key={`${k}-${c}`} className="cell" style={{ animationDelay: `${k * 28}ms` }}>{c}</span>;
-          })}
-        </span>
-      ))}
-    </span>
-  );
+/* ---------------- sass: the app's voice ----------------
+   Lines are picked per day + state, so they don't change on every re-render. */
+function pick(arr, seed) {
+  let h = 0;
+  for (const c of String(seed)) h = (h * 31 + c.charCodeAt(0)) | 0;
+  return arr[Math.abs(h) % arr.length];
 }
-const short = (x) => (x ? x.title.split(" · ")[0].replace(/^Gym$/, "GYM").replace("Night prep for tomorrow", "NIGHT PREP").replace("Cook + pack lunch", "COOK + PACK") : "");
+const SASS = {
+  verdict: [
+    [0, ["Warming up. Allegedly.", "Day hasn’t started, apparently.", "Zero percent. Bold strategy."]],
+    [0.2, ["Mid, but moving.", "Baby steps. Still steps.", "We’re getting somewhere. Slowly."]],
+    [0.5, ["Okay, main character.", "Halfway there and looking good.", "This is giving discipline."]],
+    [0.8, ["Almost iconic.", "So close you can taste the protein.", "Finish strong, legend."]],
+    [1, ["Fully unbothered. All done.", "Every box ticked. Insufferable.", "Perfect day. Screenshot it."]],
+  ],
+  now: {
+    wake: ["Rise and grind.", "Up. Water. Go."],
+    walk: ["Shoes on. Out the door.", "Walk it off. Literally."],
+    st1: ["Brain gym time.", "Future-you is watching. Study."],
+    st2: ["Night shift: upskill.", "Close the reels. Open the IDE."],
+    work: ["Work mode. Stand up hourly.", "Desk job, not desk life. Move."],
+    gym: ["Gym. Now. No excuses.", "Iron’s waiting. Don’t ghost it."],
+    eve: ["Dance it out.", "Cardio, but make it fun."],
+    core: ["Core + stretch. Ten minutes.", "Your back says thank you."],
+    sleep: ["Phone down. Bed.", "Sleep is the cheat code."],
+    food: ["Eat it. Don’t scroll past it.", "Feed the machine."],
+    prep: ["Prep now, thank yourself later.", "Ten minutes of prep, zero excuses."],
+  },
+  late: ["They’re not gonna tick themselves.", "Ghosting your own plan? Rude.", "Fix it or tick it."],
+  done: ["Already did it. Show-off.", "Ticked. Smug mode on.", "Done. Proud of you."],
+};
+const verdictOf = (pct, seed) => pick(SASS.verdict.filter(([min]) => pct >= min).pop()[1], seed);
+const sassNow = (x, seed) => pick(SASS.now[x.id] || SASS.now[x.kind === "food" ? "food" : x.kind === "prep" ? "prep" : "work"] || ["Do the thing."], seed + x.id);
+const DAY_TITLE = {
+  mon: ["Leg day.", "Stairs will hate you tomorrow."],
+  tue: ["Upper body A.", "Push, pull, posture. Chest out."],
+  wed: ["Cardio + dance.", "Lungs today, legs tomorrow."],
+  thu: ["Glute day.", "Build the shelf. Respectfully."],
+  fri: ["Upper body B.", "Fix that desk slouch."],
+  sat: ["Active Saturday.", "Move, then brunch. In that order."],
+  sun: ["Sunday reset.", "Meal prep is self-care."],
+};
+const short = (x) => (x ? x.title.split(" · ")[0].replace("Night prep for tomorrow", "Night prep").replace("Cook + pack lunch", "Cook + pack") : "");
 
 /* ---------------- sign in ---------------- */
 function Login({ onIn }) {
@@ -304,20 +328,21 @@ function Login({ onIn }) {
       await api("POST", "/api/auth/login", { email: fd.get("email"), password: fd.get("password") });
       onIn(await api("GET", "/api/auth/me"));
     } catch (err) {
-      setMsg(err.status === 401 ? "Wrong email or password." : err.message);
+      setMsg(err.status === 401 ? "Nope. Wrong email or password." : err.message);
     }
   };
   return (
     <div className="fit">
       <div className="wrap login">
-        <div className="board">
-          <div className="board-h"><span>DEVANSH.OS</span><span>GATE CLOSED</span></div>
-          <div className="board-solo"><Flap text="CHECK IN" /></div>
+        <div className="hero">
+          <span className="sticker">devansh.os</span>
+          <h1 className="big">Who dis?</h1>
+          <p className="sub">Only Devansh gets in. Prove it.</p>
         </div>
         <form className="ecard" onSubmit={submit}>
           <div className="fld"><label htmlFor="fit-email">Email</label><input id="fit-email" name="email" type="email" autoComplete="username" required /></div>
           <div className="fld"><label htmlFor="fit-pw">Password</label><input id="fit-pw" name="password" type="password" autoComplete="current-password" required /></div>
-          <div className="acts"><button className="btn" type="submit">Board</button><span className="saved err" aria-live="polite">{msg}</span></div>
+          <div className="acts"><button className="btn" type="submit">Let me in</button><span className="saved err" aria-live="polite">{msg}</span></div>
         </form>
       </div>
     </div>
@@ -329,69 +354,68 @@ function TopBar({ now, streak }) {
   const h = Math.floor(now.min / 60), m = now.min % 60;
   return (
     <header className="topbar">
-      <div className="brand">DEVANSH<b>.OS</b></div>
+      <div className="brand">devansh<b>.os</b></div>
       <div className="clock" aria-label={`Time ${fmtT(now.min)} IST`}>
-        {String(h).padStart(2, "0")}<span className="blink">:</span>{String(m).padStart(2, "0")}<small>IST</small>
+        {String(h).padStart(2, "0")}<span className="blink">:</span>{String(m).padStart(2, "0")}
       </div>
-      <div className={`streak${streak ? " hot" : ""}`} title="Days in a row with 70%+ done"><b>{streak}</b><small>DAY<br />STREAK</small></div>
+      <div className={`streak${streak ? " hot" : ""}`} title="Days in a row with 70%+ done"><b>{streak}</b><small>day<br />streak</small></div>
     </header>
   );
 }
 
-/* ---------------- departures board (hero) ---------------- */
-function Board({ today, now, done, onGoNow, onShare }) {
+/* ---------------- hero: what's happening now ---------------- */
+function NowCard({ today, now, done, onGoNow, onShare }) {
   if (today < FIRST || today > LAST) {
     return (
-      <section className="board">
-        <div className="board-h"><span>DEPARTURES</span><span>{today > LAST ? "SERVICE ENDED" : "OPENS 26 OCT"}</span></div>
-        <div className="board-solo"><Flap text={today > LAST ? "NEW PLAN NEEDED" : "STARTS SOON"} /></div>
+      <section className="hero">
+        <span className="sticker">{today > LAST ? "plan complete" : "starts 26 oct"}</span>
+        <h1 className="big">{today > LAST ? "You did the thing." : "Patience, champ."}</h1>
+        <p className="sub">{today > LAST ? "Time for a new plan." : "The plan starts Monday."}</p>
       </section>
     );
   }
-  const p = plan(today), n = now.min, w = Math.min(Math.max(weekOf(today), 1), WEEKS);
+  const p = plan(today), n = now.min, w = Math.min(Math.max(weekOf(today), 1), WEEKS), seed = iso(today);
   let cur = null, nxt = null;
   p.all.forEach((x) => { if (x.m <= n) cur = x; else if (!nxt) nxt = x; });
   if (!nxt) nxt = { ...plan(addDays(today, 1)).all[0], tomorrow: true };
   const left = nxt.tomorrow ? 24 * 60 - n + nxt.m : nxt.m - n;
-  const inTxt = left >= 60 ? `${Math.floor(left / 60)}H ${String(left % 60).padStart(2, "0")}M` : `${left} MIN`;
+  const inTxt = left >= 60 ? `${Math.floor(left / 60)}h ${left % 60}m` : `${left} min`;
   const missed = p.all.filter((x) => x !== cur && x.m + 30 <= n && !isDoneItem(x, done) && x.id !== "sleep");
   const sc = dayScore(today, done);
   const curDone = cur && isDoneItem(cur, done);
+  const pct = Math.round(sc.pct * 100);
   return (
-    <section className="board" aria-live="polite">
-      <div className="board-h">
-        <span>DEPARTURES · {fmtD(today).toUpperCase()}</span>
-        <span>WK {w}/{WEEKS} · {phaseOf(w).name.split(" ")[0].toUpperCase()}</span>
+    <section className="hero" aria-live="polite">
+      <div className="hero-top">
+        <span className="sticker">{fmtD(today)} · wk {w}/{WEEKS} · {phaseOf(w).name.split(" ")[0].toLowerCase()}</span>
+        <span className={`pill ${curDone ? "done" : "now"}`}>{curDone ? "nailed it" : "now"}</span>
       </div>
-      {cur && (
-        <div className="board-row">
-          <div className="br-t">{fmtT(cur.m).replace(" ", "").toUpperCase()}</div>
-          <div className="br-main"><Flap text={short(cur)} /><p>{lineOf(cur)}</p></div>
-          <span className={`pill ${curDone ? "departed" : "boarding"}`}>{curDone ? "DEPARTED" : "BOARDING"}</span>
-        </div>
+      {cur ? (
+        <>
+          <h1 className="big">{curDone ? pick(SASS.done, seed + cur.id) : sassNow(cur, seed)}</h1>
+          <p className="sub"><b>{short(cur)}</b> · {lineOf(cur)}</p>
+        </>
+      ) : (
+        <h1 className="big">Morning. Plan’s ready.</h1>
       )}
-      <div className="board-row next">
-        <div className="br-t">{fmtT(nxt.m).replace(" ", "").toUpperCase()}</div>
-        <div className="br-main"><Flap text={short(nxt)} tone="dim" /><p>{nxt.tomorrow ? "Tomorrow · " : ""}{lineOf(nxt)}</p></div>
-        <span className="pill countdown">IN {inTxt}</span>
-      </div>
+      <div className="next-line"><span className="pill next">up next</span><span><b>{short(nxt)}</b> {nxt.tomorrow ? "tomorrow" : `in ${inTxt}`}</span></div>
       {missed.length > 0 && (
-        <div className="delayed">
-          <span className="pill delayed-pill">{missed.length} DELAYED</span>
-          <span>{missed.slice(0, 3).map((x) => short(x)).join(" · ")}{missed.length > 3 ? " …" : ""}. Do it or tick it.</span>
+        <div className="late-line">
+          <span className="pill late">{missed.length} ghosted</span>
+          <span>{missed.slice(0, 3).map((x) => short(x)).join(", ")}{missed.length > 3 ? "…" : ""}. {pick(SASS.late, seed + missed.length)}</span>
         </div>
       )}
-      <div className="board-f">
-        <div className="meter" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(sc.pct * 100)} aria-label="Today done">
-          <i style={{ width: `${Math.round(sc.pct * 100)}%` }} />
-        </div>
-        <span className="mono">{sc.got}/{sc.total} DEPARTED · {Math.round(sc.pct * 100)}%</span>
-        <div className="board-btns">
-          <button className="gonow share" onClick={onShare}>Share story</button>
-          <button className="gonow" onClick={onGoNow}>Jump to now</button>
+      <div className="score">
+        <b>{pct}<small>%</small></b>
+        <div>
+          <div className="meter" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label="Today done"><i style={{ width: `${pct}%` }} /></div>
+          <span>{verdictOf(sc.pct, seed + Math.floor(pct / 10))} · {sc.got}/{sc.total} done</span>
         </div>
       </div>
-      {sc.pct >= 1 && <div className="allclear"><Flap text="ALL DEPARTED" tone="green" /></div>}
+      <div className="hero-btns">
+        <button className="btn" onClick={onShare}>Flex on Insta</button>
+        <button className="btn ghost" onClick={onGoNow}>Where am I?</button>
+      </div>
     </section>
   );
 }
@@ -419,7 +443,7 @@ function DayStrip({ sel, setSel, today, ticks }) {
 
 /* ---------------- bottom tab bar ---------------- */
 function BottomNav({ tab, setTab }) {
-  const tabs = [["train", "Today", CalendarClock], ["meals", "Food", UtensilsCrossed], ["prog", "Body", Activity], ["edit", "Tweak", SlidersHorizontal]];
+  const tabs = [["today", "Today", CalendarClock], ["gym", "Gym", Dumbbell], ["meals", "Food", UtensilsCrossed], ["prog", "Body", Activity], ["edit", "Tweak", SlidersHorizontal]];
   return (
     <nav className="bottomnav" role="tablist">
       {tabs.map(([id, label, Icon]) => (
@@ -434,16 +458,15 @@ function BottomNav({ tab, setTab }) {
 
 /* ---------------- timeline row ---------------- */
 function statusOf(x, list, sel, today, now, done) {
-  const isDone = isDoneItem(x, done);
-  if (isDone) return ["departed", "DEPARTED"];
+  if (isDoneItem(x, done)) return ["done", "nailed it"];
   const ds = iso(sel), ts = iso(today);
-  if (ds < ts) return ["delayed", "MISSED"];
-  if (ds > ts) return ["sched", "ON TIME"];
+  if (ds < ts) return ["late", "skipped"];
+  if (ds > ts) return ["later", "later"];
   const n = now.min;
-  if (list.filter((y) => y.m <= n).pop() === x) return ["boarding", "BOARDING"];
-  if (x.m + 30 <= n && x.id !== "sleep") return ["delayed", "DELAYED"];
-  if (list.find((y) => y.m > n) === x) return ["next", "NEXT"];
-  return ["sched", "ON TIME"];
+  if (list.filter((y) => y.m <= n).pop() === x) return ["now", "do it now"];
+  if (x.m + 30 <= n && x.id !== "sleep") return ["late", "ghosting?"];
+  if (list.find((y) => y.m > n) === x) return ["next", "up next"];
+  return ["later", "later"];
 }
 
 function Slot({ x, list, sel, today, now, done, onTick, children }) {
@@ -451,7 +474,7 @@ function Slot({ x, list, sel, today, now, done, onTick, children }) {
   const isDone = !!done[x.id];
   const [stamp, setStamp] = useState(false);
   const tick = () => {
-    if (!isDone) { setStamp(true); setTimeout(() => setStamp(false), 600); try { navigator.vibrate && navigator.vibrate(12); } catch {} }
+    if (!isDone) { setStamp(true); setTimeout(() => setStamp(false), 700); try { navigator.vibrate && navigator.vibrate(12); } catch {} }
     onTick(x.id);
   };
   return (
@@ -471,9 +494,10 @@ function Slot({ x, list, sel, today, now, done, onTick, children }) {
         {children}
         {!x.gym && (
           <button className={`tickbtn${isDone ? " on" : ""}`} aria-pressed={isDone} onClick={tick}>
-            {isDone ? "Done ✓ — tap to undo" : "Mark done"}
+            {isDone ? "Done ✓ (tap to undo)" : "Did it"}
           </button>
         )}
+        {stamp && <span className="confetti" aria-hidden="true">{pick(["yesss", "slay", "easy", "boom", "W"], x.id + Date.now())}</span>}
       </div>
     </li>
   );
@@ -535,27 +559,10 @@ function WeekGrid({ sel, today }) {
 }
 
 /* ---------------- tabs ---------------- */
-function DayPlan({ sel, today, now, done, toggle, clear, kg, setKg }) {
-  const p = plan(sel), dk = iso(sel), isT = dk === iso(today);
-  const title = GYM[p.k] ? GYM[p.k].title : p.k === "wed" ? "Endurance + dance" : p.k === "sat" ? "Active day" : "Rest day";
+function HowTo({ dk, clear }) {
   return (
     <>
-      <div className="dayhead">
-        <div className="eyebrow">{NAME[p.k]} {fmtD(sel)}{isT ? " · today" : ""}</div>
-        <h2>{title}</h2>
-        <div className="chips"><span className="chip">10k steps</span><span className="chip">Sleep 7–8 h</span><span className="chip">3–4 L water</span></div>
-      </div>
-      <div className="note"><b>{p.ph.name} phase:</b> {p.ph.note}</div>
-      <ol className="timeline">
-        {p.train.map((x) => (
-          <Slot key={x.id} x={x} list={p.train} sel={sel} today={today} now={now} done={done} onTick={(id) => toggle(dk, id)}>
-            {x.gym && <GymBlock ex={x.gym} done={done} onTick={(id) => toggle(dk, id)} kg={kg} setKg={setKg} />}
-          </Slot>
-        ))}
-      </ol>
-      <div className="sec">This week at a glance</div>
-      <WeekGrid sel={sel} today={today} />
-      <div className="sec">How to</div>
+      <div className="sec">How to (read once, flex forever)</div>
       <details className="box"><summary>Getting stronger</summary><div className="in"><ol>
         <li>Pick a weight you can lift for the bottom of the rep range with clean form. Same weight for all sets.</li>
         <li>Each session, add 1 rep somewhere. Type the kg in the box; it’s saved.</li>
@@ -568,7 +575,7 @@ function DayPlan({ sel, today, now, done, toggle, clear, kg, setKg }) {
         <li>Kneeling hip flexor: 2 × 30 s per side</li><li>Lying figure-4 glute: 2 × 30 s per side</li><li>Doorway chest: 2 × 30 s</li>
         <li>Gentle cat-camel: 8 slow reps</li><li>Calf stretch on a wall: 2 × 30 s</li><li>Chin tucks: 10</li>
         <li>No deep toe touches or seated forward folds. Stop if the left leg tingles.</li></ul></div></details>
-      <details className="box"><summary>Back rules</summary><div className="in"><ul>
+      <details className="box"><summary>Back rules (non-negotiable)</summary><div className="in"><ul>
         <li>No deadlifts, Romanian deadlifts, kettlebell swings, barbell back squats, sit-ups or fast twisting.</li>
         <li>Machines and supported positions first. End the set when form slips.</li>
         <li>Flare day: walk + gentle core only. Don’t train hard on painkillers.</li>
@@ -584,6 +591,55 @@ function DayPlan({ sel, today, now, done, toggle, clear, kg, setKg }) {
   );
 }
 
+function Today({ sel, today, now, done, toggle, kg, setKg, openGym }) {
+  const p = plan(sel), dk = iso(sel), isT = dk === iso(today);
+  const [title, sub] = DAY_TITLE[p.k];
+  return (
+    <>
+      <div className="dayhead">
+        <div className="eyebrow">{NAME[p.k]} {fmtD(sel)}{isT ? " · today" : ""}</div>
+        <h2>{title}</h2>
+        <p className="tag">{sub}</p>
+        <div className="chips"><span className="chip">10k steps</span><span className="chip">~{p.protein} g protein</span><span className="chip">sleep 7–8 h</span><span className="chip">3–4 L water</span></div>
+      </div>
+      <div className="note"><b>{p.ph.name} phase:</b> {p.ph.note}</div>
+      <div className="sec">The whole day · workout, food, everything</div>
+      <ol className="timeline">
+        {p.all.map((x) => (
+          <Slot key={x.id + x.m} x={x} list={p.all} sel={sel} today={today} now={now} done={done} onTick={(id) => toggle(dk, id)}>
+            {x.gym && (
+              <>
+                <GymBlock ex={x.gym} done={done} onTick={(id) => toggle(dk, id)} kg={kg} setKg={setKg} />
+                <button className="tickbtn" onClick={openGym}>Open the Gym tab</button>
+              </>
+            )}
+          </Slot>
+        ))}
+      </ol>
+    </>
+  );
+}
+
+function Gym({ sel, today, done, toggle, clear, kg, setKg }) {
+  const p = plan(sel), dk = iso(sel), isT = dk === iso(today);
+  const g = p.train.find((x) => x.gym);
+  const [title, sub] = DAY_TITLE[p.k];
+  return (
+    <>
+      <div className="dayhead">
+        <div className="eyebrow">{NAME[p.k]} {fmtD(sel)}{isT ? " · today" : ""} · 6:30 pm</div>
+        <h2>{g ? title : "No gym today."}</h2>
+        <p className="tag">{g ? sub : p.k === "wed" ? "Dance class + a long walk. Lungs day." : p.k === "sat" ? "Dance or a 60-minute walk. Pick one, do it." : "Rest is training too. Walk, stretch, meal prep."}</p>
+        {g && <div className="chips"><span className="chip">warm-up first</span><span className="chip">same weight every set</span><span className="chip">stop 1–2 reps early</span></div>}
+      </div>
+      {g ? <GymBlock ex={g.gym} done={done} onTick={(id) => toggle(dk, id)} kg={kg} setKg={setKg} /> : <div className="note">Use the day strip above to peek at the next gym day.</div>}
+      <div className="sec">This week</div>
+      <WeekGrid sel={sel} today={today} />
+      <HowTo dk={dk} clear={clear} />
+    </>
+  );
+}
+
 function Meals({ sel, today, now, done, toggle }) {
   const p = plan(sel), t = plan(addDays(sel, 1)), dk = iso(sel), isT = dk === iso(today);
   const onTick = (id) => toggle(dk, id);
@@ -591,7 +647,8 @@ function Meals({ sel, today, now, done, toggle }) {
     <>
       <div className="dayhead">
         <div className="eyebrow">{NAME[p.k]} {fmtD(sel)}{isT ? " · today" : ""}</div>
-        <h2>Today’s food</h2>
+        <h2>Feed the machine.</h2>
+        <p className="tag">Protein first. Oil by the spoon, not the pour.</p>
         <div className="chips"><span className="chip">≈ {p.protein} g protein</span><span className="chip">1,800–1,900 kcal</span><span className="chip">No oil top-ups</span></div>
       </div>
       {p.protein < 110 && <div className="note">Planned protein is about {p.protein} g. To reach 110 g, add one: a bowl of hung curd (~8 g), 50 g paneer in a meal (~9 g), or a second scoop of whey (26 g).</div>}

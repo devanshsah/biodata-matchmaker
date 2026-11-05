@@ -104,7 +104,7 @@ Only the `downloads` table holds data. Accounts don't need moving: just create y
 
 ## DEVANSH.OS (fitness + day planner)
 
-Your day as a departures board: tasks are BOARDING when it's their time, DEPARTED when ticked, DELAYED when you're 30+ minutes behind. Built for the phone: bottom tab bar, big tap targets, home-screen app.
+The planner that roasts you into shape: it tells you what to do right now, hypes you when you tick things off, and calls you out when you ghost a task. Built for the phone: bottom tab bar (Today, Gym, Food, Body, Tweak), big tap targets, home-screen app, and a "Flex on Insta" button that turns your day into a story card.
 
 **Add it to your iPhone:** open `https://fit.devanshsah.com` (or `/fit`) in Safari → Share → **Add to Home Screen**. It opens full-screen like an app.
 
