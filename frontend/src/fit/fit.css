@@ -255,16 +255,28 @@
 .fit .ecard h3 { font-family: var(--display); font-weight: 700; font-size: 22px; text-transform: uppercase; }
 .fit .cur { background: var(--bg); border-radius: 10px; padding: 9px 11px; font-size: 13.5px; }
 .fit .cur b { font: 600 10.5px var(--mono); letter-spacing: 1.2px; text-transform: uppercase; color: var(--amber); display: block; margin-bottom: 2px; }
-.fit .fld { display: grid; gap: 5px; }
+.fit .fld { display: grid; gap: 5px; min-width: 0; align-content: start; }
 .fit .fld label { font: 600 12px var(--body); color: var(--muted); }
 .fit .fld input, .fit .fld textarea, .fit .fit-sel {
-  width: 100%; min-height: 46px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px;
+  display: block; box-sizing: border-box; width: 100%; min-width: 0; max-width: 100%; height: 46px; margin: 0;
+  padding: 0 12px; border: 1px solid var(--line); border-radius: 12px; line-height: 44px;
   background: var(--bg); color: var(--ink); font: 16px var(--body); /* 16px stops iOS zoom */
+  -webkit-appearance: none; appearance: none;
 }
-.fit .fld textarea { min-height: 76px; resize: vertical; }
-.fit .frow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+/* iPhone draws date pickers and dropdowns at their own size; pin them to the grid cell. */
+.fit .fld input[type="date"] { text-align: left; }
+.fit .fld input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
+.fit .fld input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: .6; }
+.fit .fld input[type="file"] { height: auto; min-height: 46px; line-height: normal; padding: 11px 12px; }
+.fit .fit-sel {
+  padding-right: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%238a9099' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center;
+}
+.fit .fld textarea { height: auto; min-height: 76px; line-height: 1.4; padding: 10px 12px; resize: vertical; }
+.fit .frow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px 10px; align-items: end; }
 .fit .exed { border-top: 1px solid var(--line); padding-top: 12px; display: grid; gap: 10px; }
-.fit .exed .frow3 { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 8px; }
+.fit .exed .frow3 { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.4fr) minmax(0,1fr); gap: 8px; align-items: end; }
 .fit .acts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .fit .btn { border: 0; border-radius: 12px; padding: 12px 18px; font: 700 15px var(--body); background: var(--amber); color: var(--amber-ink); }
 .fit .btn:active { transform: scale(.97); }
@@ -294,7 +306,8 @@
 .fit .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
 .fit .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 10px; }
 .fit .stat b { display: block; font-family: var(--display); font-weight: 800; font-size: 30px; line-height: 1; }
-.fit .stat span { font-size: 11.5px; color: var(--muted); }
+.fit .stat span { display: block; margin-top: 6px; font-size: 11.5px; line-height: 1.35; color: var(--muted); }
+.fit .stat sup, .fit .fld label sup { font-size: .7em; line-height: 0; }
 .fit .dn { color: var(--done); } .fit .up { color: var(--cardio); }
 .fit .thumb { max-width: 100%; border-radius: 10px; border: 1px solid var(--line); max-height: 240px; object-fit: contain; }
 .fit .pt-wrap { overflow-x: auto; margin-top: 10px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
@@ -332,3 +345,18 @@
 .fit .story-preview { width: min(58vw, 280px); aspect-ratio: 9 / 16; justify-self: center; border-radius: 14px; border: 1px solid var(--line); background: var(--bg); max-width: 100%; -webkit-touch-callout: default; user-select: auto; -webkit-user-select: auto; }
 .fit .story-tip { margin: 0; font-size: 13px; color: var(--muted); }
 .fit .story-tip.err { color: var(--low); }
+
+/* ---------- body scan upload ---------- */
+.fit .scan-drop {
+  position: relative; display: grid; gap: 4px; place-items: center; text-align: center; cursor: pointer;
+  min-height: 108px; padding: 18px 14px; border: 1.5px dashed #3a3e45; border-radius: 14px; background: var(--bg);
+}
+.fit .scan-drop b { font-family: var(--display); font-size: 22px; letter-spacing: .04em; text-transform: uppercase; color: var(--ink); }
+.fit .scan-drop span { font-size: 13px; color: var(--muted); }
+.fit .scan-drop input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.fit .scan-drop.busy { border-color: var(--effort); }
+.fit .scan-drop.busy b { animation: fit-blink 1s steps(2, start) infinite; }
+.fit .scan-drop:focus-within { outline: 2px solid var(--ink); outline-offset: 2px; }
+.fit .scan-msg { margin: 0; }
+.fit .scan-manual summary { cursor: pointer; font-size: 14px; color: var(--muted); padding: 4px 0; }
+.fit .scan-manual form { display: grid; gap: 12px; margin-top: 10px; }

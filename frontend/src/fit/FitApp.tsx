@@ -736,22 +736,39 @@ function Progress({ scans, aiRead, reload, today }) {
   const first = eve[eve.length - 1], latest = eve[0];
   const set = (k, v) => setDraft((d) => ({ ...d, [k]: v }));
 
-  const read = async () => {
-    setBusy("read"); setMsg("");
+  const [manual, setManual] = useState(!aiRead);
+  // Pick a photo → read the numbers → save. No form to check.
+  const auto = async (f) => {
+    setFile(f); setMsg("");
+    if (!f) return;
+    if (!aiRead || !f.type.startsWith("image/")) {
+      setManual(true);
+      setMsg(!aiRead ? "Photo reading isn’t switched on yet, so type the numbers below." : "PDFs can’t be read automatically. Type the numbers below.");
+      return;
+    }
+    setBusy("read");
     try {
+      const img = await shrink(f);
+      const up = img === f ? f : new File([img], "scan.jpg", { type: "image/jpeg" });
       const fd = new FormData();
-      fd.append("image", await shrink(file), "scan.jpg");
+      fd.append("image", up, up.name);
       const r = await api("POST", "/api/fit/scans/read", fd, true);
-      setDraft((d) => {
-        const n = { ...d };
-        ["weight", "fat", "pbf", "smm", "vfa", "waist"].forEach((k) => { if (typeof r[k] === "number") n[k] = String(r[k]); });
-        if (r.date && /^\d{4}-\d{2}-\d{2}$/.test(r.date)) n.date = r.date;
-        if (typeof r.hour === "number") n.time = r.hour < 14 ? "morning" : "evening";
-        return n;
-      });
-      setFormKey((k) => k + 1);
-      setMsg("Numbers filled in. Check them against the paper, then save.");
-    } catch { setMsg("Couldn’t read the photo. Type the numbers in."); }
+      const rec = { date: /^\d{4}-\d{2}-\d{2}$/.test(r.date || "") ? r.date : iso(today), time: typeof r.hour === "number" ? (r.hour < 14 ? "morning" : "evening") : "evening" };
+      FIELDS.forEach(([k]) => { if (typeof r[k] === "number") rec[k] = r[k]; });
+      if (rec.weight == null) throw new Error("no weight");
+      setBusy("save");
+      const sd = new FormData();
+      sd.append("data", JSON.stringify(rec));
+      sd.append("file", up, up.name);
+      await api("POST", "/api/fit/scans", sd, true);
+      await reload();
+      const bits = [`${rec.weight} kg`, rec.fat != null && `${rec.fat} kg fat`, rec.pbf != null && `${rec.pbf}%`, rec.smm != null && `${rec.smm} kg muscle`].filter(Boolean).join(" · ");
+      setMsg(`Saved ${fmtD(dateOf(rec.date))} (${rec.time}): ${bits}.`);
+      setFile(null); setManual(false); setFormKey((k) => k + 1);
+    } catch {
+      setManual(true);
+      setMsg("Couldn’t read that photo. Try a sharper, straight-on shot, or type the numbers below.");
+    }
     setBusy("");
   };
 
@@ -789,22 +806,31 @@ function Progress({ scans, aiRead, reload, today }) {
           {latest.vfa && first.vfa ? <Stat v={latest.vfa - first.vfa} u="cm²" l="Visceral fat" /> : null}
         </div>
       )}
-      <form className="ecard" onSubmit={save} key={formKey}>
+      <div className="ecard">
         <h3>Add a scan</h3>
-        <div className="fld"><label htmlFor="scanfile">Photo or PDF of the report</label><input id="scanfile" type="file" accept="image/*,application/pdf" onChange={(e) => { setFile(e.target.files[0] || null); setMsg(""); }} /></div>
-        {thumb && <img className="thumb" src={thumb} alt="Selected report" />}
-        {aiRead && <div className="acts"><button className="btn ghost" type="button" disabled={!file || !file.type.startsWith("image/") || busy === "read"} onClick={read}>{busy === "read" ? "Reading…" : "Read numbers from the photo"}</button></div>}
-        <div className="frow">
-          <div className="fld"><label htmlFor="sdate">Scan date</label><input id="sdate" type="date" required defaultValue={draft.date} onChange={(e) => set("date", e.target.value)} /></div>
-          <div className="fld"><label htmlFor="stime">Time of day</label><select id="stime" className="fit-sel" defaultValue={draft.time} onChange={(e) => set("time", e.target.value)}><option value="evening">Evening</option><option value="morning">Morning</option></select></div>
-        </div>
-        <div className="frow">
-          {FIELDS.map(([f, l, u]) => (
-            <div className="fld" key={f}><label htmlFor={`sf-${f}`}>{l} ({u})</label><input id={`sf-${f}`} type="number" step="0.1" inputMode="decimal" defaultValue={draft[f] ?? ""} onChange={(e) => set(f, e.target.value)} /></div>
-          ))}
-        </div>
-        <div className="acts"><button className="btn" type="submit" disabled={busy === "save"}>{busy === "save" ? "Saving…" : "Save scan"}</button><span className="saved" aria-live="polite">{msg}</span></div>
-      </form>
+        <label className={`scan-drop${busy ? " busy" : ""}`} htmlFor="scanfile">
+          <b>{busy === "read" ? "Reading the report…" : busy === "save" ? "Saving…" : "Upload scan photo"}</b>
+          <span>{aiRead ? "Numbers are read and saved automatically" : "Photo or PDF of the report"}</span>
+          <input key={formKey} id="scanfile" type="file" accept="image/*,application/pdf" disabled={!!busy} onChange={(e) => auto(e.target.files[0] || null)} />
+        </label>
+        {msg && <p className="saved scan-msg" aria-live="polite">{msg}</p>}
+        <details className="scan-manual" open={manual} onToggle={(e) => setManual(e.currentTarget.open)}>
+          <summary>Type the numbers instead</summary>
+          <form onSubmit={save} key={formKey}>
+            {thumb && <img className="thumb" src={thumb} alt="Selected report" />}
+            <div className="frow">
+              <div className="fld"><label htmlFor="sdate">Scan date</label><input id="sdate" type="date" required defaultValue={draft.date} onChange={(e) => set("date", e.target.value)} /></div>
+              <div className="fld"><label htmlFor="stime">Time of day</label><select id="stime" className="fit-sel" defaultValue={draft.time} onChange={(e) => set("time", e.target.value)}><option value="evening">Evening</option><option value="morning">Morning</option></select></div>
+            </div>
+            <div className="frow">
+              {FIELDS.map(([f, l, u]) => (
+                <div className="fld" key={f}><label htmlFor={`sf-${f}`}>{l} ({u})</label><input id={`sf-${f}`} type="number" step="0.1" inputMode="decimal" defaultValue={draft[f] ?? ""} onChange={(e) => set(f, e.target.value)} /></div>
+              ))}
+            </div>
+            <div className="acts"><button className="btn" type="submit" disabled={busy === "save"}>{busy === "save" ? "Saving…" : "Save scan"}</button></div>
+          </form>
+        </details>
+      </div>
       <div className="sec">All scans</div>
       {!list.length ? <p style={{ color: "var(--muted)", fontSize: 14 }}>No scans yet. Add your first one above.</p> : (
         <div className="pt-wrap">
