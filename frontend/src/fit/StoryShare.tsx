@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import * as P from "./plan.js";
 
 const { plan, iso, fmtT, START, WEEKS, weekOf, phaseOf } = P;
+const DAYMS = 864e5;
 const W = 1080, H = 1920;
 const C = { bg: "#000000", panel: "#0F1012", line: "#22252A", ink: "#F2F4F5", muted: "#8A9099",
   good: "#2BD97A", mid: "#F5D90A", low: "#FF3B4A", effort: "#1E9BF0", fuel: "#B38CFF" };
@@ -46,8 +47,8 @@ export function storyStats({ today, now, done, streak, scans, kg, isDoneItem }) 
   let effort = (done.walk ? 4 : 0) + (done.eve ? 6 : 0) + (done.core ? 1.5 : 0) + (sets ? 11 * (setsDone / sets) : 0);
   effort = Math.min(21, effort);
   const protein = p.meals.filter((x) => done[x.id]).reduce((a, x) => a + (x.p || 0), 0);
-  const w = Math.min(Math.max(weekOf(today), 1), WEEKS);
-  const dayN = Math.round((today - START) / 864e5) + 1;
+  const w = Math.min(weekOf(today), WEEKS);
+  const dayN = Math.round((today - START) / DAYMS) + 1;
   return { p, items, got, pct: items.length ? got / items.length : 0, gymTitle: gymItem ? gymItem.title.replace("Gym · ", "") : null,
     sets, setsDone, top, fatDelta, effort, protein, fuel: Math.min(1, protein / 120), fatSince: eve[0]?.date, w, phase: phaseOf(w).name, dayN, total: WEEKS * 7, streak, now };
 }
@@ -66,7 +67,8 @@ export function drawStory(canvas, st, today, steps) {
   ctx.textAlign = "right"; ctx.font = `600 30px ${BODY}`; ctx.fillStyle = C.muted;
   const date = today.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" }).toUpperCase().replace(",", "");
   ctx.fillText(date, R, 268);
-  ctx.textAlign = "left"; ctx.fillText(`DAY ${st.dayN} OF ${st.total} · WEEK ${st.w}`, L, 318);
+  ctx.textAlign = "left";
+  ctx.fillText(st.dayN >= 1 ? `DAY ${st.dayN} OF ${st.total} · WEEK ${st.w}` : `WARM-UP · PLAN STARTS IN ${1 - st.dayN} DAYS`, L, 318);
 
   // three rings
   const ry = 560, rr0 = 120, gap = (R - L) / 3;

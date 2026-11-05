@@ -1,7 +1,9 @@
 /* The plan: schedule, workouts, meals, prep and study blocks. Your saved changes (overrides) are applied on top. */
 
-/* ---------- calendar: plan runs Mon 26 Oct – Sun 27 Dec 2026 (9 weeks) ---------- */
-const START=new Date(2026,9,26), WEEKS=9, DAY=864e5;
+/* ---------- calendar: plan runs Mon 16 Nov – Sun 27 Dec 2026 (6 weeks).
+   The two weeks before (from Mon 2 Nov) are a warm-up: same schedule, light weights. ---------- */
+const START=new Date(2026,10,16), WEEKS=6, DAY=864e5;
+const WARMUP_START=new Date(2026,10,2);
 const KEYS=['mon','tue','wed','thu','fri','sat','sun'];
 const NAME={mon:'Monday',tue:'Tuesday',wed:'Wednesday',thu:'Thursday',fri:'Friday',sat:'Saturday',sun:'Sunday'};
 const SHORT={mon:'Mon',tue:'Tue',wed:'Wed',thu:'Thu',fri:'Fri',sat:'Sat',sun:'Sun'};
@@ -18,13 +20,14 @@ const fmtT=m=>{let h=Math.floor(m/60),mm=m%60,ap=h>=12?'pm':'am';h=h%12||12;retu
 const fmtD=d=>d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
 
 /* ---------- phases ---------- */
+const WARMUP={from:-99,to:0,name:'Warm-up',walk:'30 min',note:'The plan officially starts Mon 16 Nov. Use these days to learn the moves with light weights and lock in the routine.'};
 const PHASES=[
-  {from:1,to:2,name:'Learn',walk:'30 min',note:'Learn the moves. Every set easy, 3 reps left in the tank. Write down your weights.'},
-  {from:3,to:5,name:'Build',walk:'35–40 min',note:'Stop each set 1–2 reps short of failure. Add 1 rep or the smallest weight jump each session.'},
-  {from:6,to:8,name:'Push',walk:'40–45 min',note:'First two lifts get a 4th set. Bike intervals go to 12 min. Keep form strict, stop when it slips.'},
-  {from:9,to:9,name:'Deload + check-in',walk:'30 min',note:'Lighter week: 2 sets each at about 70% of your usual weights. Sat 26 Dec: weigh, measure waist, photos, evening body scan.'}
+  {from:1,to:1,name:'Learn',walk:'30 min',note:'Learn the moves. Every set easy, 3 reps left in the tank. Write down your weights.'},
+  {from:2,to:3,name:'Build',walk:'35–40 min',note:'Stop each set 1–2 reps short of failure. Add 1 rep or the smallest weight jump each session.'},
+  {from:4,to:5,name:'Push',walk:'40–45 min',note:'First two lifts get a 4th set. Bike intervals go to 12 min. Keep form strict, stop when it slips.'},
+  {from:6,to:6,name:'Deload + check-in',walk:'30 min',note:'Lighter week: 2 sets each at about 70% of your usual weights. Sat 26 Dec: weigh, measure waist, photos, evening body scan.'}
 ];
-const phaseOf=w=>PHASES.find(p=>w>=p.from&&w<=p.to)||PHASES[PHASES.length-1];
+const phaseOf=w=>w<=0?WARMUP:(PHASES.find(p=>w>=p.from&&w<=p.to)||PHASES[PHASES.length-1]);
 
 /* ---------- training ---------- */
 const WARM={kind:'routine',name:'Warm-up',sr:'7 min',sets:1,cue:'3 min easy bike → bird dog 6/side → glute bridge ×10 → gentle cat-camel ×6 → 1 light set of the first exercise.'};
@@ -143,7 +146,7 @@ const SHOP=['Besan 1 kg (lasts ~2 weeks)','Yellow moong dal 1 kg','Whole green m
 
 /* ---------- build a day ---------- */
 function plan(d){
-  const k=keyOf(d), w=Math.min(Math.max(weekOf(d),1),WEEKS), ph=phaseOf(w), gymDay=!!GYM[k];
+  const k=keyOf(d), w=Math.min(weekOf(d),WEEKS), ph=phaseOf(w), gymDay=!!GYM[k];
   const m=MENU[k], tm=MENU[keyOf(addDays(d,1))], train=[], meals=[], prep=[];
   const weigh=['mon','wed','fri','sun'].includes(k);
   train.push({id:'wake',m:375,kind:'routine',title:'Wake up'+(weigh?' + weigh in':''),d:'500 ml water. Coffee now is fine; none after 2 pm.'+(weigh?' Weigh after the bathroom, before coffee. Note it down.':'')});
@@ -152,7 +155,7 @@ function plan(d){
   const amT=STUDY.am[k], pmT=STUDY.pm[k], wkEnd=(k==='sat'||k==='sun');
   train.push({id:'st1',m:490,kind:'study',title:'Upskill · 2 h · '+amT,d:'8:10–10:10 am. Phone on silent. '+STUDY.how[amT]});
   if(k!=='sat'&&k!=='sun') train.push({id:'work',m:615,kind:'routine',title:'Workday habits',d:'Stand and walk 2–3 min every hour. Screen at eye level. 2 L water. Chin tucks ×10, three times.'});
-  const scan=(iso(d)==='2026-11-23'||iso(d)==='2026-12-26');
+  const scan=['2026-11-16','2026-12-05','2026-12-26'].includes(iso(d));
   if(scan) train.push({id:'scan',m:1095,kind:'routine',title:'Body scan at the gym',d:'Before training, same evening time as your past scans. No big meal in the 2 hours before.'});
   if(gymDay) train.push({id:'gym',m:1110,kind:'lift',title:'Gym · '+GYM[k].title,d:'6:30–7:40 pm. Tap a box after each set.',gym:exFor(k,ph)});
   else if(k==='wed') train.push({id:'eve',m:1110,kind:'cardio',title:'Dance class',d:'No class? 20 min easy bike + core circuit at the gym.'});
@@ -183,4 +186,4 @@ function plan(d){
 
 function setOVR(o){OVR=Object.assign({menu:{},study:{am:{},pm:{},how:{}},gym:{},log:[]},o||{});OVR.study=Object.assign({am:{},pm:{},how:{}},OVR.study);applyOVR();}
 const getOVR=()=>OVR;
-export {START,WEEKS,DAY,KEYS,NAME,SHORT,ist,keyOf,iso,addDays,weekOf,fmtT,fmtD,PHASES,phaseOf,WARM,GYM,exFor,STUDY,FOCUS,MENU,clone,DEF,applyOVR,setOVR,getOVR,SHAKE,BATCH,SHOP,plan};
+export {START,WARMUP_START,WEEKS,DAY,KEYS,NAME,SHORT,ist,keyOf,iso,addDays,weekOf,fmtT,fmtD,PHASES,phaseOf,WARM,GYM,exFor,STUDY,FOCUS,MENU,clone,DEF,applyOVR,setOVR,getOVR,SHAKE,BATCH,SHOP,plan};

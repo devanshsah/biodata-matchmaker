@@ -8,9 +8,15 @@ import * as P from "./plan.js";
 import "./fit.css";
 import StoryShare, { storyStats } from "./StoryShare";
 
-const { plan, setOVR, getOVR, applyOVR, ist, iso, addDays, keyOf, fmtT, fmtD, START, WEEKS, KEYS, NAME, SHORT, GYM, WARM, STUDY, MENU, DEF, clone, weekOf, phaseOf, SHOP } = P;
+const { plan, setOVR, getOVR, applyOVR, ist, iso, addDays, keyOf, fmtT, fmtD, START, WARMUP_START, WEEKS, KEYS, NAME, SHORT, GYM, WARM, STUDY, MENU, DEF, clone, weekOf, phaseOf, SHOP } = P;
 
-const FIRST = START;
+const FIRST = WARMUP_START;
+const mondayOf = (d) => addDays(d, -((d.getDay() + 6) % 7));
+const weekLabel = (d) => {
+  const w = Math.min(weekOf(d), WEEKS);
+  if (w <= 0) { const n = Math.round((START - d) / 864e5); return `WARM-UP · STARTS IN ${n} ${n === 1 ? "DAY" : "DAYS"}`; }
+  return `WEEK ${w} OF ${WEEKS} · ${phaseOf(w).name.split(" ")[0].toUpperCase()}`;
+};
 const LAST = addDays(START, WEEKS * 7 - 1);
 const KIND_LABEL = { lift: "Strength", cardio: "Cardio", food: "Eat", prep: "Prep", study: "Upskill", rest: "Rest", routine: "Routine" };
 const clampDay = (d) => (d < FIRST ? FIRST : d > LAST ? LAST : d);
@@ -402,13 +408,13 @@ function NowCard({ today, now, done, onGoNow, onShare }) {
   if (today < FIRST || today > LAST) {
     return (
       <section className="hero">
-        <span className="eyebrow">{today > LAST ? "PLAN COMPLETE" : "STARTS 26 OCT"}</span>
+        <span className="eyebrow">{today > LAST ? "PLAN COMPLETE" : "STARTS SOON"}</span>
         <h1 className="big">{today > LAST ? "Block complete." : "Plan starts Monday."}</h1>
         <p className="sub">{today > LAST ? "Time to set the next goal." : "Get some sleep in the meantime."}</p>
       </section>
     );
   }
-  const p = plan(today), n = now.min, w = Math.min(Math.max(weekOf(today), 1), WEEKS), seed = iso(today);
+  const p = plan(today), n = now.min, seed = iso(today);
   let cur = null, nxt = null;
   p.all.forEach((x) => { if (x.m <= n) cur = x; else if (!nxt) nxt = x; });
   if (!nxt) nxt = { ...plan(addDays(today, 1)).all[0], tomorrow: true };
@@ -422,7 +428,7 @@ function NowCard({ today, now, done, onGoNow, onShare }) {
     <section className="hero" aria-live="polite">
       <div className="hero-top">
         <span className="eyebrow">{today.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" }).toUpperCase()}</span>
-        <span className="eyebrow">WEEK {w} OF {WEEKS} · {phaseOf(w).name.split(" ")[0].toUpperCase()}</span>
+        <span className="eyebrow">{weekLabel(today)}</span>
       </div>
       <div className="rings">
         <Ring value={s.day} label="DAY" display={`${Math.round(s.day * 100)}%`} color={COL[tone(s.day)]} />
@@ -454,10 +460,10 @@ function NowCard({ today, now, done, onGoNow, onShare }) {
 
 /* ---------------- day strip ---------------- */
 function DayStrip({ sel, setSel, today, ticks }) {
-  const w = Math.min(Math.max(weekOf(sel), 1), WEEKS), mon = addDays(START, (w - 1) * 7);
+  const mon = mondayOf(sel);
   return (
     <nav className="daystrip" aria-label="Pick a day">
-      <button className="wk" aria-label="Previous week" disabled={w <= 1} onClick={() => setSel(clampDay(addDays(sel, -7)))}>‹</button>
+      <button className="wk" aria-label="Previous week" disabled={mon <= FIRST} onClick={() => setSel(clampDay(addDays(sel, -7)))}>‹</button>
       {KEYS.map((k, i) => {
         const d = addDays(mon, i), sc = dayScore(d, ticks[iso(d)]);
         const pct = sc && d <= today ? Math.round(sc.pct * 100) : 0;
@@ -468,7 +474,7 @@ function DayStrip({ sel, setSel, today, ticks }) {
           </button>
         );
       })}
-      <button className="wk" aria-label="Next week" disabled={w >= WEEKS} onClick={() => setSel(clampDay(addDays(sel, 7)))}>›</button>
+      <button className="wk" aria-label="Next week" disabled={addDays(mon, 7) > LAST} onClick={() => setSel(clampDay(addDays(sel, 7)))}>›</button>
     </nav>
   );
 }
@@ -569,7 +575,7 @@ function GymBlock({ ex, done, onTick, kg, setKg }) {
 }
 
 function WeekGrid({ sel, today }) {
-  const w = Math.min(Math.max(weekOf(sel), 1), WEEKS), mon = addDays(START, (w - 1) * 7);
+  const mon = mondayOf(sel);
   const ds = KEYS.map((_, i) => addDays(mon, i)), ps = ds.map(plan);
   const Cell = ({ k, b, s }) => <td style={{ "--k": `var(--${k})` }}><b>{b}</b>{s && <span>{s}</span>}</td>;
   const rows = [
@@ -617,7 +623,7 @@ function HowTo({ dk, clear }) {
       <details className="box"><summary>Check-ins</summary><div className="in"><ul>
         <li>Weigh Mon, Wed, Fri, Sun mornings. Watch the weekly average, not single days.</li>
         <li>On pace: average dropping 0.5–0.8 kg a week. Two flat weeks: cut one roti or a small bowl of rice a day.</li>
-        <li>Waist at the belly button every other Sunday.</li><li>Body scans: Mon 23 Nov and Sat 26 Dec, evening.</li></ul></div></details>
+        <li>Waist at the belly button every other Sunday.</li><li>Body scans: Mon 16 Nov (start), Sat 5 Dec and Sat 26 Dec, evening.</li></ul></div></details>
       <button className="reset" onClick={() => clear(dk)}>Clear this day’s ticks</button>
     </>
   );

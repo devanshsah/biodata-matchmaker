@@ -120,7 +120,7 @@ Everything (ticks, weights, edits, scans and the scan report files) is stored in
 
 Reminders are scheduled from the app: each time you open it, it sends the next 14 days of tasks to the server. Open it at least once every two weeks to keep them coming.
 
-The plan runs Mon 26 Oct – Sun 27 Dec 2026. To extend it, change `START` and `WEEKS` in `frontend/src/fit/plan.js`.
+The plan runs 6 weeks, Mon 16 Nov – Sun 27 Dec 2026, with a warm-up from Mon 2 Nov. To change it, edit `START`, `WEEKS` and `WARMUP_START` in `frontend/src/fit/plan.js`.
 
 ## Database
 
