@@ -164,6 +164,7 @@ export default function FitApp() {
     syncReminders();
   }, [syncReminders]);
   const reloadScans = useCallback(async () => setScans(await api("GET", "/api/fit/scans")), []);
+  useLiveFavicon(now, ticks, ready);
 
   if (me === undefined) return <div className="fit"><div className="boot"><Flap text="LOADING" /></div></div>;
   if (me === null) return <Login onIn={(m) => setMe(m)} />;
@@ -192,6 +193,59 @@ export default function FitApp() {
       <BottomNav tab={tab} setTab={setTab} />
     </div>
   );
+}
+
+/* ---------------- live favicon + tab title ----------------
+   The tab icon is a split-flap "D" with a status light: amber = something boarding now,
+   red (blinking) = you're running late, green = everything due so far is done.
+   The tab title shows what's boarding, e.g. "▶ LUNCH · DEVANSH.OS". */
+const LED = { amber: "#FFB224", red: "#FF5A4E", green: "#3DD68C", grey: "#5B6169" };
+function faviconSvg(led, on) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<rect x="2" y="2" width="60" height="60" rx="14" fill="#0E0F11"/>
+<rect x="10" y="9" width="38" height="47" rx="6" fill="#1C1D21"/>
+<rect x="10" y="9" width="38" height="23" rx="6" fill="#24262B" transform="rotate(-6 29 32)"/>
+<text x="29" y="47" text-anchor="middle" font-family="Menlo,Consolas,monospace" font-weight="700" font-size="34" fill="#FFB224">D</text>
+<rect x="10" y="31" width="38" height="2.5" fill="#050506"/>
+<circle cx="51" cy="13" r="11" fill="#0E0F11"/>
+<circle cx="51" cy="13" r="8" fill="${on ? led : "#2A2C31"}"/>
+</svg>`;
+}
+function useLiveFavicon(now, ticks, ready) {
+  const [blink, setBlink] = useState(true);
+  const today = now.date;
+  const inRange = today >= FIRST && today <= LAST;
+  let led = LED.grey, label = "";
+  if (ready && inRange) {
+    const p = plan(today), n = now.min, done = ticks[iso(today)] || {};
+    const cur = p.all.filter((x) => x.m <= n).pop();
+    const late = p.all.some((x) => x !== cur && x.m + 30 <= n && !isDoneItem(x, done) && x.id !== "sleep");
+    if (late) led = LED.red;
+    else if (cur && !isDoneItem(cur, done)) led = LED.amber;
+    else led = LED.green;
+    if (cur) label = `${isDoneItem(cur, done) ? "✓" : "▶"} ${short(cur).toUpperCase()}`;
+  }
+  useEffect(() => {
+    if (led !== LED.red) { setBlink(true); return; }
+    const t = setInterval(() => setBlink((b) => !b), 900);
+    return () => clearInterval(t);
+  }, [led]);
+  useEffect(() => {
+    let link = document.querySelector('link[data-fit-icon]');
+    const hidden = [...document.querySelectorAll('link[rel~="icon"]:not([data-fit-icon])')];
+    hidden.forEach((l) => l.setAttribute("media", "not all"));
+    if (!link) {
+      link = document.createElement("link");
+      link.rel = "icon"; link.type = "image/svg+xml"; link.setAttribute("data-fit-icon", "");
+      document.head.appendChild(link);
+    }
+    link.href = "data:image/svg+xml," + encodeURIComponent(faviconSvg(led, blink));
+    return () => { hidden.forEach((l) => l.removeAttribute("media")); };
+  }, [led, blink]);
+  useEffect(() => {
+    document.title = label ? `${label} · DEVANSH.OS` : "DEVANSH.OS";
+  }, [label]);
+  useEffect(() => () => { document.querySelector('link[data-fit-icon]')?.remove(); }, []);
 }
 
 /* ---------------- day score + streak ---------------- */
