@@ -2,14 +2,9 @@ package com.devanshsah.site.fit;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.security.SecureRandom;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
-import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,25 +35,24 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @RequestMapping("/api/fit")
 public class FitController {
     private static final Set<String> IMAGE_TYPES = Set.of("image/jpeg", "image/png", "image/webp", "image/gif");
-    private static final Map<String, String> EXT = Map.of("image/jpeg", ".jpg", "image/png", ".png", "image/webp", ".webp",
-            "image/heic", ".heic", "image/gif", ".gif", "application/pdf", ".pdf");
 
     private final JdbcTemplate db;
     private final ObjectMapper json;
     private final PushSender push;
     private final ScanReader reader;
-    private final Path uploads;
+    private final FileStore files;
+    private final ReminderEngine reminders;
     private final ZoneId zone;
 
-    public FitController(JdbcTemplate db, ObjectMapper json, PushSender push, ScanReader reader,
-                         @Value("${app.upload-dir}") String uploadDir, @Value("${app.zone}") String zone) throws IOException {
+    public FitController(JdbcTemplate db, ObjectMapper json, PushSender push, ScanReader reader, FileStore files,
+                         ReminderEngine reminders, @Value("${app.zone}") String zone) {
         this.db = db;
         this.json = json;
         this.push = push;
         this.reader = reader;
-        this.uploads = Paths.get(uploadDir).toAbsolutePath();
+        this.files = files;
+        this.reminders = reminders;
         this.zone = ZoneId.of(zone);
-        Files.createDirectories(this.uploads);
     }
 
     /* ---------- everything the app needs on open ---------- */
@@ -103,13 +97,17 @@ public class FitController {
     @PutMapping("/ticks/{day}")
     @Transactional
     public Map<String, Object> saveTicks(@PathVariable String day, @RequestBody Map<String, Boolean> items) {
-        java.sql.Date d = java.sql.Date.valueOf(parseDay(day));
+        LocalDate ld = parseDay(day);
+        java.sql.Date d = java.sql.Date.valueOf(ld);
         db.update("DELETE FROM fit_ticks WHERE day = ?", d);
+        Set<String> done = new java.util.HashSet<>();
         for (Map.Entry<String, Boolean> e : items.entrySet()) {
             if (Boolean.TRUE.equals(e.getValue()) && e.getKey().length() <= 40) {
                 db.update("INSERT INTO fit_ticks (day, item, done) VALUES (?, ?, TRUE)", d, e.getKey());
+                done.add(e.getKey());
             }
         }
+        reminders.setTicks(ld, done);
         return Map.of("ok", true);
     }
 
@@ -153,6 +151,7 @@ public class FitController {
     @PostMapping("/scans")
     public Map<String, Object> saveScan(@RequestParam("data") String data,
                                         @RequestParam(value = "file", required = false) MultipartFile file) throws IOException {
+        if (file != null && file.getSize() > 15 * 1024 * 1024) throw ApiErrors.bad("File is too big (max 15 MB)");
         JsonNode r = json.readTree(data);
         LocalDate day = parseDay(r.path("date").asText(""));
         String time = "morning".equals(r.path("time").asText()) ? "morning" : "evening";
@@ -160,10 +159,7 @@ public class FitController {
         if (file != null && !file.isEmpty()) {
             String type = file.getContentType() == null ? "" : file.getContentType();
             if (!type.startsWith("image/") && !type.equals("application/pdf")) throw ApiErrors.bad("Upload a photo or a PDF");
-            byte[] rnd = new byte[4];
-            new SecureRandom().nextBytes(rnd);
-            image = System.currentTimeMillis() + "-" + HexFormat.of().formatHex(rnd) + EXT.getOrDefault(type, "");
-            file.transferTo(uploads.resolve(image));
+            image = files.save(file.getBytes(), type);
         }
         List<String> old = db.queryForList("SELECT image FROM fit_scans WHERE day = ? AND image IS NOT NULL", String.class, java.sql.Date.valueOf(day));
         db.update("INSERT INTO fit_scans (day, time_of_day, weight, fat, pbf, smm, vfa, waist, image) VALUES (?,?,?,?,?,?,?,?,?) "
@@ -171,16 +167,16 @@ public class FitController {
                         + "pbf = EXCLUDED.pbf, smm = EXCLUDED.smm, vfa = EXCLUDED.vfa, waist = EXCLUDED.waist, "
                         + "image = COALESCE(EXCLUDED.image, fit_scans.image), updated_at = now()",
                 java.sql.Date.valueOf(day), time, num(r, "weight"), num(r, "fat"), num(r, "pbf"), num(r, "smm"), num(r, "vfa"), num(r, "waist"), image);
-        if (image != null && !old.isEmpty()) Files.deleteIfExists(uploads.resolve(old.get(0)));
+        if (image != null && !old.isEmpty()) files.delete(old.get(0));
         return Map.of("ok", true);
     }
 
     @DeleteMapping("/scans/{day}")
-    public Map<String, Object> deleteScan(@PathVariable String day) throws IOException {
+    public Map<String, Object> deleteScan(@PathVariable String day) {
         java.sql.Date d = java.sql.Date.valueOf(parseDay(day));
         List<String> old = db.queryForList("SELECT image FROM fit_scans WHERE day = ? AND image IS NOT NULL", String.class, d);
         db.update("DELETE FROM fit_scans WHERE day = ?", d);
-        if (!old.isEmpty()) Files.deleteIfExists(uploads.resolve(old.get(0)));
+        if (!old.isEmpty()) files.delete(old.get(0));
         return Map.of("ok", true);
     }
 
@@ -205,7 +201,7 @@ public class FitController {
     @Transactional
     public Map<String, Object> syncReminders(@RequestBody ReminderSync sync) {
         java.sql.Date from = java.sql.Date.valueOf(parseDay(sync.from()));
-        db.update("DELETE FROM fit_reminders WHERE sent_at IS NULL AND day >= ?", from);
+        db.update("DELETE FROM fit_reminders WHERE day >= ?", from);
         int n = 0;
         for (ReminderItem it : sync.items() == null ? List.<ReminderItem>of() : sync.items()) {
             if (!"start".equals(it.kind()) && !"late".equals(it.kind())) continue;
@@ -215,6 +211,7 @@ public class FitController {
                             + "ON CONFLICT (day, item, kind) DO NOTHING",
                     java.sql.Date.valueOf(d), cut(it.item(), 40), it.kind(), fire, cut(it.title(), 200), cut(it.body(), 500));
         }
+        reminders.reloadReminders();
         return Map.of("ok", true, "scheduled", n);
     }
 

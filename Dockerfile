@@ -1,4 +1,5 @@
 # One image: React site built into the Spring Boot jar, served on port 8080.
+# Used both by `docker compose up --build` and by the Cloud Run deploy.
 
 # ---- 1. Build the React frontend ----
 FROM node:20-alpine AS web
@@ -18,17 +19,15 @@ COPY backend/src ./src
 COPY --from=web /web/dist ./src/main/resources/static
 RUN mvn -q -B package -DskipTests
 
-# ---- 3. Run ----
-FROM eclipse-temurin:17-jre
+# ---- 3. Run (small Alpine JRE keeps the image well under the free registry storage) ----
+FROM eclipse-temurin:17-jre-alpine
 ENV TZ=Asia/Kolkata \
-    UPLOAD_DIR=/data/uploads \
-    JAVA_OPTS="-XX:MaxRAMPercentage=75"
-RUN useradd --system --uid 10001 app && mkdir -p /data/uploads && chown -R app /data
+    JAVA_OPTS="-XX:MaxRAMPercentage=75 -XX:TieredStopAtLevel=1 -Xss512k"
+RUN apk add --no-cache tzdata && adduser -S -u 10001 app
 WORKDIR /app
 COPY --from=api /api/target/site.jar ./site.jar
 USER app
-VOLUME ["/data"]
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
-  CMD bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080' || exit 1
+  CMD wget -qO- http://127.0.0.1:${PORT:-8080}/api/health > /dev/null || exit 1
 ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar /app/site.jar"]

@@ -37,8 +37,6 @@ services:
       ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-sonnet-5-5}
     ports:
       - "${PORT:-8080}:8080"
-    volumes:
-      - uploads:/data/uploads
 
   # Optional: put the site on devanshsah.com and fit.devanshsah.com through Cloudflare,
   # with HTTPS and no open ports.   docker compose --profile tunnel up -d
@@ -54,4 +52,3 @@ services:
 
 volumes:
   pgdata:
-  uploads:

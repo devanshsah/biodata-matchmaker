@@ -13,7 +13,6 @@ services:
       DATABASE_URL: jdbc:postgresql://db:5432/devansh
       DATABASE_USER: devansh
       DATABASE_PASSWORD: ${DB_PASSWORD}
-      UPLOAD_DIR: /data/uploads
       VAPID_SUBJECT: ${VAPID_SUBJECT:-mailto:you@example.com}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
     ports:
@@ -21,7 +20,6 @@ services:
     volumes:
       - ./backend:/api
       - m2:/root/.m2          # keeps downloaded Java libraries between runs
-      - uploads:/data/uploads
 
 volumes:
   m2:
