@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
-# One-time setup for Devansh's Page on Google Cloud (Singapore). Run it in Cloud Shell:
+# One-time setup for Devansh's Page on Google Cloud. Run it in Cloud Shell:
 #
-#   bash deploy/gcp-setup.sh <PROJECT_ID> "<NEON_CONNECTION_STRING>" <YOUR_EMAIL>
+#   bash deploy/gcp-setup.sh <PROJECT_ID> "<NEON_CONNECTION_STRING>" <YOUR_EMAIL> [REGION]
+#
+# REGION defaults to us-central1 (Iowa): the fully free choice (Tier 1 pricing, free egress
+# allowance, free Cloud Storage). Use asia-southeast1 for Singapore: faster from India,
+# but outbound data is billed (a few rupees a month).
 #
 # What it does:
 #   1. Turns on Cloud Run, Artifact Registry, Cloud Scheduler, Budgets
@@ -16,7 +20,11 @@ PROJECT_ID="${1:?Usage: bash deploy/gcp-setup.sh <PROJECT_ID> \"<NEON_CONNECTION
 DATABASE_URL="${2:?Second argument: the Neon connection string, in quotes}"
 EMAIL="${3:?Third argument: your email (for push notifications)}"
 REPO_SLUG="${GITHUB_REPO:-devanshsah/biodata-matchmaker}"
-REGION="asia-southeast1"     # Singapore: in the Cloud Run free tier, supports custom domains, next to Neon
+REGION="${4:-us-central1}"
+case "$REGION" in
+  us-central1|us-east1|us-west1|asia-southeast1|asia-east1|asia-northeast1|europe-west1|europe-west4) ;;
+  *) echo "Pick a region that supports custom domains, e.g. us-central1 or asia-southeast1"; exit 1 ;;
+esac
 AR_REPO="devanshs-page"
 SA="github-deployer"
 SA_EMAIL="${SA}@${PROJECT_ID}.iam.gserviceaccount.com"
@@ -46,7 +54,7 @@ step "Turning on Cloud Run, Artifact Registry, Cloud Scheduler, Budgets"
 gcloud services enable run.googleapis.com artifactregistry.googleapis.com cloudscheduler.googleapis.com \
   iam.googleapis.com billingbudgets.googleapis.com
 
-step "Image registry (Singapore, keeps the 2 newest images)"
+step "Image registry ($REGION, keeps the 2 newest images)"
 if ! gcloud artifacts repositories describe "$AR_REPO" --location "$REGION" >/dev/null 2>&1; then
   gcloud artifacts repositories create "$AR_REPO" --repository-format docker --location "$REGION" \
     --description "Devansh's Page images"
@@ -90,13 +98,14 @@ gh secret set GCP_SA_KEY     --repo "$REPO_SLUG" < "$KEY_FILE"
 gh secret set CRON_KEY       --repo "$REPO_SLUG" --body "$CRON_KEY"
 gh secret set DATABASE_URL   --repo "$REPO_SLUG" --body "$DATABASE_URL"
 gh secret set VAPID_SUBJECT  --repo "$REPO_SLUG" --body "mailto:$EMAIL"
+gh variable set GCP_REGION   --repo "$REPO_SLUG" --body "$REGION"
 rm -f "$KEY_FILE"
 
 cat <<EOF
 
 =====================================================================
 All set. Next: merge the pull request on GitHub (or push to main).
-GitHub Actions then builds and deploys the site to Cloud Run in Singapore.
+GitHub Actions then builds and deploys the site to Cloud Run ($REGION).
 Watch it here:  https://github.com/$REPO_SLUG/actions
 
 Optional: to let the app read numbers off scan photos, add your Claude API key:

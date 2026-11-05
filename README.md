@@ -45,12 +45,12 @@ Then go to `/auth`, click **Create an admin account**, and sign up. That same ac
 
 ## Host it for free (Google Cloud Run + Neon)
 
-Built for one user at $0: the site scales to zero when you're not using it, and every piece stays inside a free tier.
+Built for one user at $0: the site scales to zero when you're not using it, and every piece stays inside a free tier. The default region is **Iowa (`us-central1`)**, the fully free choice. Singapore (`asia-southeast1`) is faster from India but bills outbound data (a few rupees a month): pass it as the 4th argument to the setup script.
 
 | Piece | Service | Free allowance |
 | --- | --- | --- |
-| Site + API | Cloud Run, Singapore (`asia-southeast1`) | 2M requests, 360k GiB-s, 180k vCPU-s a month |
-| Database | Neon Postgres, Singapore | 1 GB storage, 100 compute-hours a month (sleeps after 5 idle minutes) |
+| Site + API | Cloud Run, Iowa (`us-central1`) | 2M requests, 360k GiB-s, 180k vCPU-s, 1 GiB outbound data a month |
+| Database | Neon Postgres, AWS US East (Ohio) | 1 GB storage, 100 compute-hours a month (sleeps after 5 idle minutes) |
 | Reminders | Cloud Scheduler pings the server every 2 minutes | 3 jobs per billing account |
 | Images | Artifact Registry (keeps the 2 newest) | 0.5 GB |
 | Deploys | GitHub Actions on every push to `main` | 2,000 minutes a month (private repo) |
@@ -59,7 +59,7 @@ Built for one user at $0: the site scales to zero when you're not using it, and 
 
 ### One-time setup (about 15 minutes)
 
-1. **Neon (the PostgreSQL database):** sign up at neon.tech → **New project** → region **AWS Asia Pacific (Singapore)** → **Connect** → copy the connection string (starts with `postgresql://`).
+1. **Neon (the PostgreSQL database):** sign up at neon.tech → **New project** → region **AWS US East 2 (Ohio)** (closest to Iowa; pick Singapore if you deploy to Singapore) → **Connect** → copy the connection string (starts with `postgresql://`).
 2. **Google Cloud project:** console.cloud.google.com → project picker → **New project** → note the **project ID**. Then **Billing** → link a billing account (a card is required even for the free tier).
 3. **Cloud Shell** (the `>_` icon at the top right of the console), then run:
    ```bash
@@ -79,7 +79,7 @@ Cloud Run's domain mapping is free but marked "preview" by Google. It's fine for
 1. Verify the domain once: search.google.com/search-console → add `devanshsah.com` → follow the DNS TXT steps (add the TXT record in Cloudflare DNS).
 2. In Cloud Shell:
    ```bash
-   gcloud beta run domain-mappings create --service devanshs-page --domain fit.devanshsah.com --region asia-southeast1
+   gcloud beta run domain-mappings create --service devanshs-page --domain fit.devanshsah.com --region us-central1
    ```
    It lists the DNS records to add.
 3. In Cloudflare **DNS**, add those records with the proxy **off** (grey cloud), so Google can issue the HTTPS certificate. It can take up to an hour.

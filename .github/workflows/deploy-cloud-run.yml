@@ -1,4 +1,4 @@
-# Builds the Docker image and deploys it to Google Cloud Run (Singapore), then makes sure
+# Builds the Docker image and deploys it to Google Cloud Run, then makes sure
 # the Cloud Scheduler job that sends reminders exists. Runs on every push to main, or by hand
 # from the Actions tab (pick any branch).
 #
@@ -21,7 +21,8 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  REGION: asia-southeast1
+  # Set by deploy/gcp-setup.sh as a repo variable. us-central1 (Iowa) is the fully free choice.
+  REGION: ${{ vars.GCP_REGION || 'us-central1' }}
   SERVICE: devanshs-page
   REPO: devanshs-page
 
