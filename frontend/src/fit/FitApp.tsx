@@ -187,8 +187,8 @@ export default function FitApp() {
       <TopBar now={now} streak={streakOf(ticks, today)} />
       <div className="wrap">
         {err && <div className="note">{err}</div>}
-        {ready && <NowCard today={today} now={now} done={ticks[iso(today)] || {}} onGoNow={goNow} onShare={() => setStoryOpen(true)} />}
-        {ready && <DayStrip sel={sel} setSel={setSel} today={today} ticks={ticks} />}
+        {ready && tab === "today" && <NowCard today={today} now={now} done={ticks[iso(today)] || {}} onGoNow={goNow} onShare={() => setStoryOpen(true)} />}
+        {ready && (tab === "today" || tab === "gym" || tab === "meals") && <DayStrip sel={sel} setSel={setSel} today={today} ticks={ticks} />}
         {ready && (
           <>
             <main hidden={tab !== "today"}>{tab === "today" && <Today {...common} done={selDone} toggle={toggleTick} kg={kg} setKg={setKg} openGym={() => { setTab("gym"); window.scrollTo({ top: 0 }); }} />}</main>

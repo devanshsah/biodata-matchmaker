@@ -1,5 +1,5 @@
 // @ts-nocheck
-// "Share story": draws today's progress as a 1080×1920 departures-board card and hands it
+// "Share day": draws today's progress as a 1080×1920 card and hands it
 // to the phone's share sheet, where Instagram → Story is one tap away.
 import { useEffect, useRef, useState } from "react";
 import * as P from "./plan.js";
@@ -108,6 +108,9 @@ export default function StoryShare({ open, onClose, today, stats }) {
   const [steps, setSteps] = useState(() => { try { return localStorage.getItem(STEPS_KEY(today)) || ""; } catch { return ""; } });
   const [url, setUrl] = useState("");
   const [msg, setMsg] = useState("");
+  const fileRef = useRef(null);
+  const name = `devansh-os-${iso(today)}.png`;
+  const ios = typeof navigator !== "undefined" && (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1));
 
   useEffect(() => {
     if (!open || !ref.current) return;
@@ -117,6 +120,8 @@ export default function StoryShare({ open, onClose, today, stats }) {
       if (cancel) return;
       drawStory(ref.current, stats, today, steps);
       setUrl(ref.current.toDataURL("image/png"));
+      // Build the file now: iPhone only opens the share sheet if share() runs straight from the tap.
+      ref.current.toBlob((b) => { if (!cancel && b) fileRef.current = new File([b], name, { type: "image/png" }); }, "image/png");
     })();
     try { localStorage.setItem(STEPS_KEY(today), steps); } catch {}
     return () => { cancel = true; };
@@ -124,25 +129,25 @@ export default function StoryShare({ open, onClose, today, stats }) {
 
   if (!open) return null;
 
-  const blob = () => new Promise((r) => ref.current.toBlob(r, "image/png"));
-  const name = `devansh-os-${iso(today)}.png`;
-  const share = async () => {
+  const share = () => {
     setMsg("");
-    try {
-      const file = new File([await blob()], name, { type: "image/png" });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file] });
-        return;
-      }
-      save(); setMsg("Sharing isn’t supported here, so the image was saved. Post it from Instagram → Story.");
-    } catch (e) {
-      if (e && e.name !== "AbortError") setMsg("Couldn’t open sharing. Use Save image instead.");
+    const file = fileRef.current;
+    if (!file) { setMsg("Still drawing the card, tap again in a second."); return; }
+    if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
+      navigator.share({ files: [file] }).catch((e) => {
+        if (e && e.name === "AbortError") return;
+        setMsg(ios ? "Couldn’t open sharing. Press and hold the card above → Save to Photos, then post it from Instagram." : "Couldn’t open sharing. Use Save image instead.");
+      });
+      return;
     }
+    save();
   };
-  const save = async () => {
+  const save = () => {
+    if (ios) { setMsg("Press and hold the card above → Save to Photos (or Share). Then post it from Instagram → Story."); return; }
+    const file = fileRef.current;
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(await blob()); a.download = name; a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    a.href = file ? URL.createObjectURL(file) : url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    if (file) setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   };
 
   return (
@@ -162,7 +167,7 @@ export default function StoryShare({ open, onClose, today, stats }) {
           <button className="btn" onClick={share}>Share → Instagram</button>
           <button className="btn ghost" onClick={save}>Save image</button>
         </div>
-        <p className="story-tip">In the share sheet, pick <b>Instagram → Story</b>. {msg}</p>
+        {msg ? <p className="story-tip err" role="status">{msg}</p> : <p className="story-tip">In the share sheet, pick <b>Instagram → Story</b>. Or press and hold the card to save it.</p>}
       </div>
     </div>
   );

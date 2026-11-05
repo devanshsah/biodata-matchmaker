@@ -312,3 +312,23 @@
 @media (prefers-reduced-motion: reduce) {
   .fit *, .fit *::before, .fit *::after { animation: none !important; transition: none !important; }
 }
+
+/* ---------- share-day sheet ---------- */
+.fit .story-sheet {
+  position: fixed; inset: 0; z-index: 60;
+  background: rgba(0, 0, 0, .78); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  display: grid; align-items: end; justify-items: center;
+}
+.fit .story-inner {
+  width: 100%; max-width: 520px; max-height: 100dvh; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  background: var(--panel); border-top: 1px solid var(--line); border-radius: 22px 22px 0 0;
+  padding: 14px max(16px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  display: grid; gap: 12px; animation: fit-sheet-up .25s ease both;
+}
+@keyframes fit-sheet-up { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+.fit .story-head { display: flex; justify-content: space-between; align-items: center; }
+.fit .story-head b { font-family: var(--display); font-size: 24px; letter-spacing: .04em; text-transform: uppercase; }
+.fit .story-x { border: 0; background: var(--panel-2); color: var(--ink); width: 36px; height: 36px; border-radius: 50%; font-size: 22px; line-height: 1; }
+.fit .story-preview { width: min(58vw, 280px); aspect-ratio: 9 / 16; justify-self: center; border-radius: 14px; border: 1px solid var(--line); background: var(--bg); max-width: 100%; -webkit-touch-callout: default; user-select: auto; -webkit-user-select: auto; }
+.fit .story-tip { margin: 0; font-size: 13px; color: var(--muted); }
+.fit .story-tip.err { color: var(--low); }
