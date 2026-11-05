@@ -41,14 +41,14 @@ export default function FitApp() {
   // Dark page background while the planner is open
   useEffect(() => {
     const b = document.body.style.background, c = document.documentElement.style.colorScheme;
-    document.body.style.background = "#120F16";
+    document.body.style.background = "#000000";
     document.documentElement.style.colorScheme = "dark";
     const meta = document.createElement("meta");
-    meta.name = "theme-color"; meta.content = "#120F16";
+    meta.name = "theme-color"; meta.content = "#000000";
     document.head.appendChild(meta);
     const link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = "https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap";
+    link.href = "https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap";
     document.head.appendChild(link);
     const man = document.createElement("link");
     man.rel = "manifest"; man.href = "/fit-assets/manifest.webmanifest";
@@ -168,9 +168,9 @@ export default function FitApp() {
   const reloadScans = useCallback(async () => setScans(await api("GET", "/api/fit/scans")), []);
   useLiveFavicon(now, ticks, ready);
 
-  if (me === undefined) return <div className="fit"><div className="boot"><span className="sticker">loading…</span></div></div>;
+  if (me === undefined) return <div className="fit"><div className="boot"><span className="eyebrow">LOADING</span></div></div>;
   if (me === null) return <Login onIn={(m) => setMe(m)} />;
-  if (me.role !== "admin") return <div className="fit"><div className="boot"><span className="sticker">nope</span><p>This account can’t open the planner.</p></div></div>;
+  if (me.role !== "admin") return <div className="fit"><div className="boot"><span className="eyebrow">NO ACCESS</span><p>This account can’t open the planner.</p></div></div>;
 
   const today = now.date;
   const selDone = ticks[iso(sel)] || {};
@@ -206,14 +206,13 @@ export default function FitApp() {
    The tab icon is a split-flap "D" with a status light: amber = something boarding now,
    red (blinking) = you're running late, green = everything due so far is done.
    The tab title shows what's boarding, e.g. "▶ LUNCH · DEVANSH.OS". */
-const LED = { amber: "#FFE15A", red: "#FF5A5A", green: "#5CE59B", grey: "#5B5466" };
+const LED = { amber: "#F5D90A", red: "#FF3B4A", green: "#2BD97A", grey: "#4A4F57" };
 function faviconSvg(led, on) {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-<rect x="3" y="5" width="56" height="56" rx="16" fill="#FFE15A"/>
-<rect x="1" y="2" width="56" height="56" rx="16" fill="#FF4FA3"/>
-<text x="29" y="46" text-anchor="middle" font-family="Arial Rounded MT Bold,Arial,sans-serif" font-weight="900" font-size="40" fill="#120F16" transform="rotate(-8 29 32)">d</text>
-<circle cx="52" cy="12" r="11" fill="#120F16"/>
-<circle cx="52" cy="12" r="7.5" fill="${on ? led : "#3A3343"}"/>
+<rect width="64" height="64" rx="14" fill="#000"/>
+<circle cx="32" cy="32" r="21" fill="none" stroke="#1E2024" stroke-width="6"/>
+<circle cx="32" cy="32" r="21" fill="none" stroke="${on ? led : "#2A2D33"}" stroke-width="6" stroke-linecap="round" stroke-dasharray="99 132" transform="rotate(-90 32 32)"/>
+<text x="32" y="41" text-anchor="middle" font-family="Arial Narrow,Arial,sans-serif" font-weight="700" font-size="25" fill="#fff">D</text>
 </svg>`;
 }
 function useLiveFavicon(now, ticks, ready) {
@@ -282,39 +281,74 @@ function pick(arr, seed) {
 }
 const SASS = {
   verdict: [
-    [0, ["Warming up. Allegedly.", "Day hasn’t started, apparently.", "Zero percent. Bold strategy."]],
-    [0.2, ["Mid, but moving.", "Baby steps. Still steps.", "We’re getting somewhere. Slowly."]],
-    [0.5, ["Okay, main character.", "Halfway there and looking good.", "This is giving discipline."]],
-    [0.8, ["Almost iconic.", "So close you can taste the protein.", "Finish strong, legend."]],
-    [1, ["Fully unbothered. All done.", "Every box ticked. Insufferable.", "Perfect day. Screenshot it."]],
+    [0, ["Day’s open. Start with one tick.", "Nothing logged yet. Easy fix."]],
+    [0.2, ["Moving. Keep stacking.", "Early, but in motion."]],
+    [0.5, ["On track. Stay consistent.", "Solid day so far."]],
+    [0.8, ["Strong day. Close it out.", "Nearly there. Finish clean."]],
+    [1, ["Everything logged. Elite.", "Perfect day. Rest well."]],
   ],
   now: {
-    wake: ["Rise and grind.", "Up. Water. Go."],
-    walk: ["Shoes on. Out the door.", "Walk it off. Literally."],
-    st1: ["Brain gym time.", "Future-you is watching. Study."],
-    st2: ["Night shift: upskill.", "Close the reels. Open the IDE."],
-    work: ["Work mode. Stand up hourly.", "Desk job, not desk life. Move."],
-    gym: ["Gym. Now. No excuses.", "Iron’s waiting. Don’t ghost it."],
-    eve: ["Dance it out.", "Cardio, but make it fun."],
-    core: ["Core + stretch. Ten minutes.", "Your back says thank you."],
-    sleep: ["Phone down. Bed.", "Sleep is the cheat code."],
-    food: ["Eat it. Don’t scroll past it.", "Feed the machine."],
-    prep: ["Prep now, thank yourself later.", "Ten minutes of prep, zero excuses."],
+    wake: ["Water first. Then the day.", "Up. Hydrate. Go."],
+    walk: ["Morning walk. Easy pace, big payoff.", "Steps now, focus later."],
+    st1: ["Deep work block. Phone face-down.", "Two hours that compound."],
+    st2: ["Evening study. Close the feed.", "Second block. Finish the chapter."],
+    work: ["Work hours. Stand up every hour.", "Desk time. Your back needs breaks."],
+    gym: ["Training window is open.", "Gym time. Quality reps only."],
+    eve: ["Cardio session. Have fun with it.", "Move. It counts."],
+    core: ["Core + mobility. Ten minutes.", "Protect the spine. Quick routine."],
+    sleep: ["Wind down. Sleep is recovery.", "Lights out. Tomorrow starts now."],
+    food: ["Fuel up. Protein first.", "Eat to perform."],
+    prep: ["Prep now. Future you says thanks.", "Ten minutes of prep."],
   },
-  late: ["They’re not gonna tick themselves.", "Ghosting your own plan? Rude.", "Fix it or tick it."],
-  done: ["Already did it. Show-off.", "Ticked. Smug mode on.", "Done. Proud of you."],
+  late: ["Recover the day: start with the first one.", "Catch up or log it if it’s done.", "Still time to turn it around."],
+  done: ["Nice work.", "On to the next.", "Logged. Keep moving."],
 };
 const verdictOf = (pct, seed) => pick(SASS.verdict.filter(([min]) => pct >= min).pop()[1], seed);
-const sassNow = (x, seed) => pick(SASS.now[x.id] || SASS.now[x.kind === "food" ? "food" : x.kind === "prep" ? "prep" : "work"] || ["Do the thing."], seed + x.id);
+const sassNow = (x, seed) => pick(SASS.now[x.id] || SASS.now[x.kind === "food" ? "food" : x.kind === "prep" ? "prep" : "work"] || ["Next up."], seed + x.id);
 const DAY_TITLE = {
-  mon: ["Leg day.", "Stairs will hate you tomorrow."],
-  tue: ["Upper body A.", "Push, pull, posture. Chest out."],
-  wed: ["Cardio + dance.", "Lungs today, legs tomorrow."],
-  thu: ["Glute day.", "Build the shelf. Respectfully."],
-  fri: ["Upper body B.", "Fix that desk slouch."],
-  sat: ["Active Saturday.", "Move, then brunch. In that order."],
-  sun: ["Sunday reset.", "Meal prep is self-care."],
+  mon: ["Leg day", "Big muscles, big burn."],
+  tue: ["Upper body A", "Push, pull, posture."],
+  wed: ["Cardio + dance", "Engine day. Keep it fun."],
+  thu: ["Glutes + hamstrings", "Strong hips, happy back."],
+  fri: ["Upper body B", "Undo the desk slouch."],
+  sat: ["Active Saturday", "Move first, brunch second."],
+  sun: ["Reset day", "Recover, prep, plan the week."],
 };
+
+/* Three scores, Whoop-style: DAY (tasks done), EFFORT (0–21 from training), FUEL (protein eaten vs target). */
+const PROTEIN_TARGET = 120;
+function scoresOf(d, done) {
+  const p = plan(d), dn = done || {};
+  const sc = dayScore(d, dn);
+  let effort = 0;
+  if (dn.walk) effort += 4;
+  if (dn.eve) effort += 6;
+  if (dn.core) effort += 1.5;
+  const g = p.train.find((x) => x.gym);
+  if (g) {
+    let tot = 0, got = 0;
+    g.gym.forEach((e, i) => { if (e.kind) return; tot += e.sets; for (let s = 0; s < e.sets; s++) if (dn[`g${i}:${s}`]) got++; });
+    if (tot) effort += 11 * (got / tot);
+  }
+  effort = Math.min(21, effort);
+  const protein = p.meals.filter((x) => dn[x.id]).reduce((a, x) => a + (x.p || 0), 0);
+  return { day: sc.pct, got: sc.got, total: sc.total, effort, protein, fuel: Math.min(1, protein / PROTEIN_TARGET) };
+}
+const tone = (f) => (f >= 0.67 ? "good" : f >= 0.34 ? "mid" : "low");
+
+function Ring({ value, max = 1, label, display, color }) {
+  const r = 34, c = 2 * Math.PI * r, f = Math.max(0, Math.min(1, value / max));
+  return (
+    <div className="ring-g">
+      <svg viewBox="0 0 80 80" aria-hidden="true">
+        <circle cx="40" cy="40" r={r} className="ring-bg" />
+        <circle cx="40" cy="40" r={r} className="ring-fg" style={{ stroke: color, strokeDasharray: `${c * f} ${c}` }} />
+      </svg>
+      <b>{display}</b>
+      <span>{label}</span>
+    </div>
+  );
+}
 const short = (x) => (x ? x.title.split(" · ")[0].replace("Night prep for tomorrow", "Night prep").replace("Cook + pack lunch", "Cook + pack") : "");
 
 /* ---------------- sign in ---------------- */
@@ -328,21 +362,21 @@ function Login({ onIn }) {
       await api("POST", "/api/auth/login", { email: fd.get("email"), password: fd.get("password") });
       onIn(await api("GET", "/api/auth/me"));
     } catch (err) {
-      setMsg(err.status === 401 ? "Nope. Wrong email or password." : err.message);
+      setMsg(err.status === 401 ? "Wrong email or password." : err.message);
     }
   };
   return (
     <div className="fit">
       <div className="wrap login">
         <div className="hero">
-          <span className="sticker">devansh.os</span>
-          <h1 className="big">Who dis?</h1>
-          <p className="sub">Only Devansh gets in. Prove it.</p>
+          <span className="eyebrow">DEVANSH.OS</span>
+          <h1 className="big">Sign in</h1>
+          <p className="sub">Your day, measured.</p>
         </div>
         <form className="ecard" onSubmit={submit}>
           <div className="fld"><label htmlFor="fit-email">Email</label><input id="fit-email" name="email" type="email" autoComplete="username" required /></div>
           <div className="fld"><label htmlFor="fit-pw">Password</label><input id="fit-pw" name="password" type="password" autoComplete="current-password" required /></div>
-          <div className="acts"><button className="btn" type="submit">Let me in</button><span className="saved err" aria-live="polite">{msg}</span></div>
+          <div className="acts"><button className="btn" type="submit">Sign in</button><span className="saved err" aria-live="polite">{msg}</span></div>
         </form>
       </div>
     </div>
@@ -354,23 +388,23 @@ function TopBar({ now, streak }) {
   const h = Math.floor(now.min / 60), m = now.min % 60;
   return (
     <header className="topbar">
-      <div className="brand">devansh<b>.os</b></div>
+      <div className="brand">DEVANSH<b>.OS</b></div>
       <div className="clock" aria-label={`Time ${fmtT(now.min)} IST`}>
         {String(h).padStart(2, "0")}<span className="blink">:</span>{String(m).padStart(2, "0")}
       </div>
-      <div className={`streak${streak ? " hot" : ""}`} title="Days in a row with 70%+ done"><b>{streak}</b><small>day<br />streak</small></div>
+      <div className={`streak${streak ? " hot" : ""}`} title="Days in a row with 70%+ done"><b>{streak}</b><small>DAY<br />STREAK</small></div>
     </header>
   );
 }
 
-/* ---------------- hero: what's happening now ---------------- */
+/* ---------------- hero: scores + what's happening now ---------------- */
 function NowCard({ today, now, done, onGoNow, onShare }) {
   if (today < FIRST || today > LAST) {
     return (
       <section className="hero">
-        <span className="sticker">{today > LAST ? "plan complete" : "starts 26 oct"}</span>
-        <h1 className="big">{today > LAST ? "You did the thing." : "Patience, champ."}</h1>
-        <p className="sub">{today > LAST ? "Time for a new plan." : "The plan starts Monday."}</p>
+        <span className="eyebrow">{today > LAST ? "PLAN COMPLETE" : "STARTS 26 OCT"}</span>
+        <h1 className="big">{today > LAST ? "Block complete." : "Plan starts Monday."}</h1>
+        <p className="sub">{today > LAST ? "Time to set the next goal." : "Get some sleep in the meantime."}</p>
       </section>
     );
   }
@@ -381,40 +415,38 @@ function NowCard({ today, now, done, onGoNow, onShare }) {
   const left = nxt.tomorrow ? 24 * 60 - n + nxt.m : nxt.m - n;
   const inTxt = left >= 60 ? `${Math.floor(left / 60)}h ${left % 60}m` : `${left} min`;
   const missed = p.all.filter((x) => x !== cur && x.m + 30 <= n && !isDoneItem(x, done) && x.id !== "sleep");
-  const sc = dayScore(today, done);
+  const s = scoresOf(today, done);
   const curDone = cur && isDoneItem(cur, done);
-  const pct = Math.round(sc.pct * 100);
+  const COL = { good: "var(--good)", mid: "var(--mid)", low: "var(--low)" };
   return (
     <section className="hero" aria-live="polite">
       <div className="hero-top">
-        <span className="sticker">{fmtD(today)} · wk {w}/{WEEKS} · {phaseOf(w).name.split(" ")[0].toLowerCase()}</span>
-        <span className={`pill ${curDone ? "done" : "now"}`}>{curDone ? "nailed it" : "now"}</span>
+        <span className="eyebrow">{today.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" }).toUpperCase()}</span>
+        <span className="eyebrow">WEEK {w} OF {WEEKS} · {phaseOf(w).name.split(" ")[0].toUpperCase()}</span>
       </div>
-      {cur ? (
-        <>
-          <h1 className="big">{curDone ? pick(SASS.done, seed + cur.id) : sassNow(cur, seed)}</h1>
-          <p className="sub"><b>{short(cur)}</b> · {lineOf(cur)}</p>
-        </>
-      ) : (
-        <h1 className="big">Morning. Plan’s ready.</h1>
+      <div className="rings">
+        <Ring value={s.day} label="DAY" display={`${Math.round(s.day * 100)}%`} color={COL[tone(s.day)]} />
+        <Ring value={s.effort} max={21} label="EFFORT" display={s.effort.toFixed(1)} color="var(--effort)" />
+        <Ring value={s.fuel} label="FUEL" display={`${Math.round(s.fuel * 100)}%`} color="var(--fuel)" />
+      </div>
+      <p className="verdict">{verdictOf(s.day, seed + Math.floor(s.day * 10))}</p>
+      {cur && (
+        <div className="now-card">
+          <div className="now-h"><span className={`pill ${curDone ? "done" : "now"}`}>{curDone ? "DONE" : "NOW"}</span><span className="eyebrow">{fmtT(cur.m).toUpperCase()}</span></div>
+          <h1 className="big">{short(cur)}</h1>
+          <p className="sub">{curDone ? pick(SASS.done, seed + cur.id) : sassNow(cur, seed)} {lineOf(cur)}</p>
+        </div>
       )}
-      <div className="next-line"><span className="pill next">up next</span><span><b>{short(nxt)}</b> {nxt.tomorrow ? "tomorrow" : `in ${inTxt}`}</span></div>
+      <div className="next-line"><span className="pill next">NEXT</span><span><b>{short(nxt)}</b> · {nxt.tomorrow ? "tomorrow" : `in ${inTxt}`}</span></div>
       {missed.length > 0 && (
         <div className="late-line">
-          <span className="pill late">{missed.length} ghosted</span>
+          <span className="pill late">{missed.length} BEHIND</span>
           <span>{missed.slice(0, 3).map((x) => short(x)).join(", ")}{missed.length > 3 ? "…" : ""}. {pick(SASS.late, seed + missed.length)}</span>
         </div>
       )}
-      <div className="score">
-        <b>{pct}<small>%</small></b>
-        <div>
-          <div className="meter" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label="Today done"><i style={{ width: `${pct}%` }} /></div>
-          <span>{verdictOf(sc.pct, seed + Math.floor(pct / 10))} · {sc.got}/{sc.total} done</span>
-        </div>
-      </div>
       <div className="hero-btns">
-        <button className="btn" onClick={onShare}>Flex on Insta</button>
-        <button className="btn ghost" onClick={onGoNow}>Where am I?</button>
+        <button className="btn" onClick={onShare}>Share day</button>
+        <button className="btn ghost" onClick={onGoNow}>Jump to now</button>
       </div>
     </section>
   );
@@ -458,15 +490,15 @@ function BottomNav({ tab, setTab }) {
 
 /* ---------------- timeline row ---------------- */
 function statusOf(x, list, sel, today, now, done) {
-  if (isDoneItem(x, done)) return ["done", "nailed it"];
+  if (isDoneItem(x, done)) return ["done", "DONE"];
   const ds = iso(sel), ts = iso(today);
-  if (ds < ts) return ["late", "skipped"];
-  if (ds > ts) return ["later", "later"];
+  if (ds < ts) return ["late", "MISSED"];
+  if (ds > ts) return ["later", "LATER"];
   const n = now.min;
-  if (list.filter((y) => y.m <= n).pop() === x) return ["now", "do it now"];
-  if (x.m + 30 <= n && x.id !== "sleep") return ["late", "ghosting?"];
-  if (list.find((y) => y.m > n) === x) return ["next", "up next"];
-  return ["later", "later"];
+  if (list.filter((y) => y.m <= n).pop() === x) return ["now", "NOW"];
+  if (x.m + 30 <= n && x.id !== "sleep") return ["late", "BEHIND"];
+  if (list.find((y) => y.m > n) === x) return ["next", "NEXT"];
+  return ["later", "LATER"];
 }
 
 function Slot({ x, list, sel, today, now, done, onTick, children }) {
@@ -494,10 +526,10 @@ function Slot({ x, list, sel, today, now, done, onTick, children }) {
         {children}
         {!x.gym && (
           <button className={`tickbtn${isDone ? " on" : ""}`} aria-pressed={isDone} onClick={tick}>
-            {isDone ? "Done ✓ (tap to undo)" : "Did it"}
+            {isDone ? "Logged ✓ · tap to undo" : "Log it"}
           </button>
         )}
-        {stamp && <span className="confetti" aria-hidden="true">{pick(["yesss", "slay", "easy", "boom", "W"], x.id + Date.now())}</span>}
+        {stamp && <span className="confetti" aria-hidden="true">+1</span>}
       </div>
     </li>
   );
@@ -562,7 +594,7 @@ function WeekGrid({ sel, today }) {
 function HowTo({ dk, clear }) {
   return (
     <>
-      <div className="sec">How to (read once, flex forever)</div>
+      <div className="sec">Guides</div>
       <details className="box"><summary>Getting stronger</summary><div className="in"><ol>
         <li>Pick a weight you can lift for the bottom of the rep range with clean form. Same weight for all sets.</li>
         <li>Each session, add 1 rep somewhere. Type the kg in the box; it’s saved.</li>
@@ -603,7 +635,7 @@ function Today({ sel, today, now, done, toggle, kg, setKg, openGym }) {
         <div className="chips"><span className="chip">10k steps</span><span className="chip">~{p.protein} g protein</span><span className="chip">sleep 7–8 h</span><span className="chip">3–4 L water</span></div>
       </div>
       <div className="note"><b>{p.ph.name} phase:</b> {p.ph.note}</div>
-      <div className="sec">The whole day · workout, food, everything</div>
+      <div className="sec">Today’s schedule · training, fuel, everything</div>
       <ol className="timeline">
         {p.all.map((x) => (
           <Slot key={x.id + x.m} x={x} list={p.all} sel={sel} today={today} now={now} done={done} onTick={(id) => toggle(dk, id)}>
@@ -628,8 +660,8 @@ function Gym({ sel, today, done, toggle, clear, kg, setKg }) {
     <>
       <div className="dayhead">
         <div className="eyebrow">{NAME[p.k]} {fmtD(sel)}{isT ? " · today" : ""} · 6:30 pm</div>
-        <h2>{g ? title : "No gym today."}</h2>
-        <p className="tag">{g ? sub : p.k === "wed" ? "Dance class + a long walk. Lungs day." : p.k === "sat" ? "Dance or a 60-minute walk. Pick one, do it." : "Rest is training too. Walk, stretch, meal prep."}</p>
+        <h2>{g ? title : "No gym session"}</h2>
+        <p className="tag">{g ? sub : p.k === "wed" ? "Dance class and a long walk. Engine day." : p.k === "sat" ? "Dance or a 60-minute walk." : "Recovery is training too. Walk, stretch, prep."}</p>
         {g && <div className="chips"><span className="chip">warm-up first</span><span className="chip">same weight every set</span><span className="chip">stop 1–2 reps early</span></div>}
       </div>
       {g ? <GymBlock ex={g.gym} done={done} onTick={(id) => toggle(dk, id)} kg={kg} setKg={setKg} /> : <div className="note">Use the day strip above to peek at the next gym day.</div>}
@@ -647,7 +679,7 @@ function Meals({ sel, today, now, done, toggle }) {
     <>
       <div className="dayhead">
         <div className="eyebrow">{NAME[p.k]} {fmtD(sel)}{isT ? " · today" : ""}</div>
-        <h2>Feed the machine.</h2>
+        <h2>Fuel</h2>
         <p className="tag">Protein first. Oil by the spoon, not the pour.</p>
         <div className="chips"><span className="chip">≈ {p.protein} g protein</span><span className="chip">1,800–1,900 kcal</span><span className="chip">No oil top-ups</span></div>
       </div>

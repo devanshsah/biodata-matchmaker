@@ -6,42 +6,25 @@ import * as P from "./plan.js";
 
 const { plan, iso, fmtT, START, WEEKS, weekOf, phaseOf } = P;
 const W = 1080, H = 1920;
-const C = { bg: "#120F16", panel: "#1C1822", line: "#342D3E", pink: "#FF4FA3", pinkInk: "#24030F", lemon: "#FFE15A",
-  aqua: "#4FE0E8", ink: "#F6F1FB", muted: "#A69CB3", green: "#5CE59B", red: "#FF6B6B", blue: "#8FA8FF" };
-const MONO = '"IBM Plex Mono", Menlo, monospace';
-const DISP = '"Bricolage Grotesque", "Arial Rounded MT Bold", system-ui, sans-serif';
-const BODY = '"IBM Plex Sans", system-ui, sans-serif';
+const C = { bg: "#000000", panel: "#0F1012", line: "#22252A", ink: "#F2F4F5", muted: "#8A9099",
+  good: "#2BD97A", mid: "#F5D90A", low: "#FF3B4A", effort: "#1E9BF0", fuel: "#B38CFF" };
+const DISP = '"Barlow Condensed", "Arial Narrow", Arial, sans-serif';
+const BODY = '"Barlow", system-ui, sans-serif';
 const STEPS_KEY = (d) => `fit-steps-${iso(d)}`;
 
 function rr(ctx, x, y, w, h, r) {
   ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
   ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
 }
-function sticker(ctx, text, x, y, bg, fg, rot = -0.04, size = 30) {
-  ctx.save(); ctx.translate(x, y); ctx.rotate(rot);
-  ctx.font = `700 ${size}px ${MONO}`; const w = ctx.measureText(text).width + size * 1.1, h = size * 1.8;
-  rr(ctx, 6, 6, w, h, h / 2); ctx.fillStyle = C.pink; ctx.fill();
-  rr(ctx, 0, 0, w, h, h / 2); ctx.fillStyle = bg; ctx.fill();
-  ctx.fillStyle = fg; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(text, w / 2, h / 2 + 2);
-  ctx.restore(); return w;
+function ringG(ctx, cx, cy, r, f, color, value, label) {
+  ctx.lineCap = "round"; ctx.lineWidth = 22;
+  ctx.strokeStyle = "#1C1E22"; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+  if (f > 0) { ctx.strokeStyle = color; ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.min(1, f)); ctx.stroke(); }
+  ctx.fillStyle = C.ink; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.font = `700 76px ${DISP}`; ctx.fillText(value, cx, cy + 4);
+  ctx.fillStyle = C.muted; ctx.font = `600 28px ${BODY}`; ctx.fillText(label, cx, cy + r + 58);
 }
-function chip(ctx, text, xRight, y, color) {
-  ctx.font = `700 26px ${MONO}`; const w = ctx.measureText(text).width + 36, h = 50;
-  rr(ctx, xRight - w, y, w, h, h / 2); ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.stroke();
-  ctx.fillStyle = color; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(text, xRight - w / 2, y + h / 2 + 1);
-}
-function wrap(ctx, text, maxW) {
-  const words = text.split(" "), lines = []; let line = "";
-  for (const w of words) { const t = line ? line + " " + w : w; if (ctx.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t; }
-  if (line) lines.push(line); return lines;
-}
-const ROAST = [
-  [0, ["Day hasn’t started. Allegedly.", "Zero percent. Bold strategy, let’s see."]],
-  [0.2, ["Mid, but moving.", "Baby steps are still steps."]],
-  [0.5, ["Main character energy.", "Halfway and looking dangerous."]],
-  [0.8, ["Almost iconic.", "So close I can smell the protein."]],
-  [1, ["Every. Single. Box. Insufferable.", "Perfect day. Don’t @ me."]],
-];
+const VERDICT = [[0, "Day’s open."], [0.2, "In motion."], [0.5, "On track."], [0.8, "Strong day."], [1, "Perfect day."]];
 
 export function storyStats({ today, now, done, streak, scans, kg, isDoneItem }) {
   const p = plan(today);
@@ -60,71 +43,62 @@ export function storyStats({ today, now, done, streak, scans, kg, isDoneItem }) 
   }
   const eve = [...scans].filter((x) => x.time !== "morning" && x.fat != null).sort((a, b) => (a.date < b.date ? -1 : 1));
   const fatDelta = eve.length > 1 ? eve[eve.length - 1].fat - eve[0].fat : null;
+  let effort = (done.walk ? 4 : 0) + (done.eve ? 6 : 0) + (done.core ? 1.5 : 0) + (sets ? 11 * (setsDone / sets) : 0);
+  effort = Math.min(21, effort);
+  const protein = p.meals.filter((x) => done[x.id]).reduce((a, x) => a + (x.p || 0), 0);
   const w = Math.min(Math.max(weekOf(today), 1), WEEKS);
   const dayN = Math.round((today - START) / 864e5) + 1;
   return { p, items, got, pct: items.length ? got / items.length : 0, gymTitle: gymItem ? gymItem.title.replace("Gym · ", "") : null,
-    sets, setsDone, top, fatDelta, fatSince: eve[0]?.date, w, phase: phaseOf(w).name, dayN, total: WEEKS * 7, streak, now };
+    sets, setsDone, top, fatDelta, effort, protein, fuel: Math.min(1, protein / 120), fatSince: eve[0]?.date, w, phase: phaseOf(w).name, dayN, total: WEEKS * 7, streak, now };
 }
 
 export function drawStory(canvas, st, today, steps) {
   const ctx = canvas.getContext("2d");
   canvas.width = W; canvas.height = H;
   ctx.fillStyle = C.bg; ctx.fillRect(0, 0, W, H);
-  // candy blobs
-  for (const [x, y, r, c] of [[900, 360, 520, "rgba(255,79,163,0.30)"], [120, 1500, 480, "rgba(79,224,232,0.16)"], [980, 1700, 380, "rgba(255,225,90,0.12)"]]) {
-    const g = ctx.createRadialGradient(x, y, 10, x, y, r); g.addColorStop(0, c); g.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-  }
   const L = 84, R = W - 84;
-  const pct = Math.round(st.pct * 100);
-  const seed = iso(today) + Math.floor(pct / 10);
-  const pickS = (arr) => { let h = 0; for (const c of seed) h = (h * 31 + c.charCodeAt(0)) | 0; return arr[Math.abs(h) % arr.length]; };
-  const roast = pickS(ROAST.filter(([m]) => st.pct >= m).pop()[1]);
+  const tone = (f) => (f >= 0.67 ? C.good : f >= 0.34 ? C.mid : C.low);
 
-  // header stickers (below Instagram's top bar)
-  const date = today.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" }).toLowerCase().replace(",", "");
-  sticker(ctx, "devansh.os", L, 250, C.lemon, C.pinkInk, -0.05, 32);
-  ctx.font = `600 30px ${MONO}`; ctx.fillStyle = C.muted; ctx.textAlign = "right"; ctx.textBaseline = "middle";
-  ctx.fillText(`${date} · day ${st.dayN}/${st.total}`, R, 282);
+  // header
+  ctx.textBaseline = "alphabetic"; ctx.textAlign = "left";
+  ctx.font = `700 40px ${DISP}`; ctx.fillStyle = C.ink; ctx.fillText("DEVANSH", L, 270);
+  ctx.fillStyle = C.muted; ctx.fillText(".OS", L + ctx.measureText("DEVANSH").width, 270);
+  ctx.textAlign = "right"; ctx.font = `600 30px ${BODY}`; ctx.fillStyle = C.muted;
+  const date = today.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" }).toUpperCase().replace(",", "");
+  ctx.fillText(date, R, 268);
+  ctx.textAlign = "left"; ctx.fillText(`DAY ${st.dayN} OF ${st.total} · WEEK ${st.w}`, L, 318);
 
-  // giant percentage + roast
-  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
-  ctx.font = `800 300px ${DISP}`; ctx.fillStyle = C.lemon; ctx.fillText(`${pct}`, L - 8, 640);
-  const pw = ctx.measureText(`${pct}`).width;
-  ctx.font = `800 140px ${DISP}`; ctx.fillStyle = C.pink; ctx.fillText("%", L + pw, 640);
-  ctx.font = `800 40px ${DISP}`; ctx.fillStyle = C.ink; ctx.fillText("of today: done.", L, 712);
-  ctx.font = `800 64px ${DISP}`; ctx.fillStyle = C.ink;
-  let y = 800;
-  for (const line of wrap(ctx, roast, R - L)) { ctx.fillText(line, L, y); y += 70; }
+  // three rings
+  const ry = 560, rr0 = 120, gap = (R - L) / 3;
+  ringG(ctx, L + gap * 0.5, ry, rr0, st.pct, tone(st.pct), `${Math.round(st.pct * 100)}%`, "DAY");
+  ringG(ctx, L + gap * 1.5, ry, rr0, st.effort / 21, C.effort, st.effort.toFixed(1), "EFFORT");
+  ringG(ctx, L + gap * 2.5, ry, rr0, st.fuel, C.fuel, `${Math.round(st.fuel * 100)}%`, "FUEL");
 
-  // meter
-  y += 10;
-  rr(ctx, L, y, R - L, 22, 11); ctx.fillStyle = C.panel; ctx.fill();
-  if (pct > 0) { rr(ctx, L, y, Math.max(22, (R - L) * st.pct), 22, 11); const mg = ctx.createLinearGradient(L, 0, R, 0); mg.addColorStop(0, C.pink); mg.addColorStop(0.5, C.lemon); mg.addColorStop(1, C.green); ctx.fillStyle = mg; ctx.fill(); }
-  y += 60;
+  // verdict
+  ctx.textAlign = "left"; ctx.fillStyle = C.ink; ctx.font = `700 92px ${DISP}`;
+  ctx.fillText(VERDICT.filter(([m]) => st.pct >= m).pop()[1].toUpperCase(), L, 870);
 
-  // stat cards
+  // stat rows
   const rows = [
-    ["tasks", `${st.got}/${st.items.length}`, st.got === st.items.length ? "all of them" : "ticked", C.green],
-    st.gymTitle ? ["gym", `${st.setsDone}/${st.sets} sets`, st.gymTitle.toLowerCase().slice(0, 20), C.blue] : ["move", "walk + dance", "no gym today", C.blue],
-    steps ? ["steps", Number(steps).toLocaleString("en-IN"), Number(steps) >= 10000 ? "goal smashed" : "keep walking", Number(steps) >= 10000 ? C.green : C.lemon] : null,
-    st.fatDelta != null ? ["fat", `${st.fatDelta > 0 ? "+" : "−"}${Math.abs(st.fatDelta).toFixed(1)} kg`, "since " + new Date(st.fatSince + "T00:00:00").toLocaleDateString("en-IN", { month: "short" }).toLowerCase(), st.fatDelta <= 0 ? C.green : C.red] : null,
-    ["streak", `${st.streak} ${st.streak === 1 ? "day" : "days"}`, st.streak >= 3 ? "on fire" : st.streak ? "building" : "starts today", st.streak ? C.pink : C.muted],
-    st.top ? ["top lift", `${st.top.kg} kg`, st.top.name.toLowerCase().slice(0, 16), C.aqua] : null,
-  ].filter(Boolean).slice(0, 5);
-  for (const [label, value, sub, color] of rows) {
-    rr(ctx, L, y, R - L, 108, 30); ctx.fillStyle = C.panel; ctx.fill(); ctx.strokeStyle = C.line; ctx.lineWidth = 2; ctx.stroke();
-    ctx.textAlign = "left"; ctx.textBaseline = "middle";
-    ctx.font = `600 28px ${MONO}`; ctx.fillStyle = C.muted; ctx.fillText(label, L + 32, y + 54);
-    ctx.font = `800 54px ${DISP}`; ctx.fillStyle = C.ink; ctx.fillText(value, L + 230, y + 56);
-    chip(ctx, sub, R - 26, y + 29, color);
-    y += 124;
+    ["TASKS", `${st.got}/${st.items.length}`],
+    st.gymTitle ? ["GYM · " + st.gymTitle.toUpperCase().slice(0, 20), `${st.setsDone}/${st.sets} SETS`] : ["MOVE", "WALK + DANCE"],
+    steps ? ["STEPS", Number(steps).toLocaleString("en-IN")] : null,
+    ["PROTEIN", `${st.protein} G`],
+    st.fatDelta != null ? ["BODY FAT SINCE " + new Date(st.fatSince + "T00:00:00").toLocaleDateString("en-IN", { month: "short" }).toUpperCase(), `${st.fatDelta > 0 ? "+" : "−"}${Math.abs(st.fatDelta).toFixed(1)} KG`] : null,
+    ["STREAK", `${st.streak} ${st.streak === 1 ? "DAY" : "DAYS"}`],
+  ].filter(Boolean).slice(0, 6);
+  let y = 940;
+  for (const [label, value] of rows) {
+    ctx.strokeStyle = C.line; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(L, y); ctx.lineTo(R, y); ctx.stroke();
+    ctx.textBaseline = "middle";
+    ctx.textAlign = "left"; ctx.font = `600 30px ${BODY}`; ctx.fillStyle = C.muted; ctx.fillText(label, L, y + 52);
+    ctx.textAlign = "right"; ctx.font = `700 56px ${DISP}`; ctx.fillStyle = C.ink; ctx.fillText(value, R, y + 54);
+    y += 106;
   }
+  ctx.strokeStyle = C.line; ctx.beginPath(); ctx.moveTo(L, y); ctx.lineTo(R, y); ctx.stroke();
 
-  // footer (above Instagram's reply bar)
-  ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
-  ctx.font = `800 40px ${DISP}`; ctx.fillStyle = C.pink;
-  ctx.fillText("lean & strong by 26 dec. watch me.", W / 2, Math.max(y + 60, 1600));
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic"; ctx.font = `600 30px ${BODY}`; ctx.fillStyle = C.muted;
+  ctx.fillText("GOAL · LEAN & STRONG BY 26 DEC", L, Math.max(y + 80, 1620));
 }
 
 export default function StoryShare({ open, onClose, today, stats }) {
@@ -173,7 +147,7 @@ export default function StoryShare({ open, onClose, today, stats }) {
     <div className="story-sheet" role="dialog" aria-modal="true" aria-label="Share story">
       <div className="story-inner">
         <div className="story-head">
-          <b>Flex on Insta</b>
+          <b>Share day</b>
           <button className="story-x" onClick={onClose} aria-label="Close">×</button>
         </div>
         <canvas ref={ref} hidden />
