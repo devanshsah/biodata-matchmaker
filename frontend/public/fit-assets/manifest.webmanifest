@@ -1,0 +1,15 @@
+{
+  "name": "DEVANSH.OS",
+  "short_name": "DEVANSH.OS",
+  "description": "Devansh's day, run like a departures board.",
+  "start_url": "/fit",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0E0F11",
+  "theme_color": "#0E0F11",
+  "icons": [
+    { "src": "/fit-assets/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/fit-assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

@@ -1,0 +1,27 @@
+# Backend in development mode, built and run inside Docker (Maven + Java 17 come from the image).
+#   npm run dev:api     → API on http://localhost:8080
+#   npm run dev:web     → React with hot reload on http://localhost:5173 (calls the API above)
+services:
+  api-dev:
+    image: maven:3.9-eclipse-temurin-17
+    working_dir: /api
+    command: mvn -q -B spring-boot:run
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: jdbc:postgresql://db:5432/devansh
+      DATABASE_USER: devansh
+      DATABASE_PASSWORD: ${DB_PASSWORD}
+      UPLOAD_DIR: /data/uploads
+      VAPID_SUBJECT: ${VAPID_SUBJECT:-mailto:you@example.com}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./backend:/api
+      - m2:/root/.m2          # keeps downloaded Java libraries between runs
+      - uploads:/data/uploads
+
+volumes:
+  m2:

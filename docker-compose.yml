@@ -1,0 +1,57 @@
+# docker compose up -d   →   site on http://localhost:8080
+#   /          portfolio
+#   /biodata   biodata (view / download form)
+#   /auth      admin sign-in       /admin   biodata download records
+#   /fit       fitness planner     (also served at the root of fit.<your-domain>)
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: devansh
+      POSTGRES_USER: devansh
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U devansh -d devansh"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    build: .
+    image: devanshs-page:latest
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: jdbc:postgresql://db:5432/devansh
+      DATABASE_USER: devansh
+      DATABASE_PASSWORD: ${DB_PASSWORD}
+      SESSION_SECRET: ${SESSION_SECRET:-}
+      VAPID_SUBJECT: ${VAPID_SUBJECT:-mailto:you@example.com}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-sonnet-5-5}
+    ports:
+      - "${PORT:-8080}:8080"
+    volumes:
+      - uploads:/data/uploads
+
+  # Optional: put the site on devanshsah.com and fit.devanshsah.com through Cloudflare,
+  # with HTTPS and no open ports.   docker compose --profile tunnel up -d
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
+    depends_on:
+      - app
+    profiles: ["tunnel"]
+
+volumes:
+  pgdata:
+  uploads:
