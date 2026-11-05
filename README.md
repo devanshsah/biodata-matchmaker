@@ -57,30 +57,20 @@ Built for one user at $0: the site scales to zero when you're not using it, and 
 
 **Trade-off:** after the site has been idle, the first visit takes about 5–15 seconds while Java starts. After that it's fast.
 
-### One-time setup (about 20 minutes)
+### One-time setup (about 15 minutes)
 
-1. **Neon:** sign up at neon.tech → **New project** → region **AWS Asia Pacific (Singapore)**. Open **Connect**, copy the connection string (starts with `postgresql://`).
-2. **Google Cloud:** create a project at console.cloud.google.com and turn on billing. A card is required even for the free tier. Note the **project ID**.
-3. Open **Cloud Shell** (the `>_` icon at the top right), upload `deploy/gcp-setup.sh` (⋮ menu → Upload), and run:
+1. **Neon (the PostgreSQL database):** sign up at neon.tech → **New project** → region **AWS Asia Pacific (Singapore)** → **Connect** → copy the connection string (starts with `postgresql://`).
+2. **Google Cloud project:** console.cloud.google.com → project picker → **New project** → note the **project ID**. Then **Billing** → link a billing account (a card is required even for the free tier).
+3. **Cloud Shell** (the `>_` icon at the top right of the console), then run:
    ```bash
-   bash gcp-setup.sh YOUR_PROJECT_ID
+   gh auth login                                   # if asked; choose GitHub.com → HTTPS → login with a browser
+   gh repo clone devanshsah/biodata-matchmaker -- -b devanshs-page
+   cd biodata-matchmaker
+   bash deploy/gcp-setup.sh YOUR_PROJECT_ID "YOUR_NEON_CONNECTION_STRING" you@example.com
    ```
-   It prints the values for the next step.
-4. **GitHub secrets** (repo → Settings → Secrets and variables → Actions → New repository secret):
-
-   | Secret | Value |
-   | --- | --- |
-   | `GCP_PROJECT_ID` | from the script |
-   | `GCP_SA_KEY` | the whole key file the script made |
-   | `CRON_KEY` | from the script |
-   | `DATABASE_URL` | the Neon connection string, pasted as is |
-   | `VAPID_SUBJECT` | `mailto:` + your email |
-   | `ANTHROPIC_API_KEY` | optional: lets the app read scan photos |
-
-   `DATABASE_USER` and `DATABASE_PASSWORD` aren't needed when the Neon string includes them.
-5. **Deploy:** GitHub → **Actions → Deploy to Cloud Run → Run workflow**. The summary shows your site's URL (`https://devanshs-page-….run.app`). After this, every push to `main` deploys automatically.
-6. **Budget alert:** Billing → Budgets & alerts → create a budget of ₹100 (or $1) so any charge at all emails you.
-7. Open the URL → `/auth` → create your admin account straight away.
+   This turns on the services, creates the image registry and deploy account, adds a budget alert, and saves every secret into GitHub.
+4. **Merge the pull request** (or push to `main`). GitHub Actions builds and deploys. The run summary shows the site URL (`https://devanshs-page-….run.app`). After this, every push to `main` deploys automatically.
+5. Open the URL → `/auth` → create your admin account straight away.
 
 ### Use your domain
 
