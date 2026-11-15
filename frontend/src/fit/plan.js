@@ -168,37 +168,37 @@ const MENU={
     b:{n:'2 besan chilla + bowl of curd',p:18,how:'80 g besan + water + ajwain + green chilli + salt + coriander. Cook 2 thin chillas with ½ tsp oil.'},
     l:{n:'2 roti + thick moong dal + lauki sabzi + curd + salad',p:20,how:'Dal from Sunday’s batch. Lauki: jeera, hing, turmeric, 10 min.',morn:'Make lauki sabzi + 2 roti, pack with Sunday dal and curd.'},
     s:{n:'Hung curd bowl + cucumber + chaat masala',p:8,how:'150 g hung curd, chopped cucumber, chaat masala, chilli flakes.'},
-    d:{n:'75 g paneer bhurji + 1 roti + sautéed beans',p:20,how:'Paneer with tomato, capsicum, jeera, haldi. Beans sautéed with jeera and hing. Cooked veg at night, not raw salad: easier on the gut.'}},
+    d:{n:'Palak paneer (100 g paneer) + 1 roti',p:24,how:'Blanch 2 bunches palak 2 min, cold water, blend with 1 green chilli + 1 tomato. Jeera + hing in 1 tsp ghee, add purée, salt, garam masala, simmer 5 min, add paneer cubes. Cooked greens at night: easy on the gut.',night:'Wash and blanch palak for tomorrow, purée, fridge.'}},
   tue:{
     b:{n:'2 moong dal chilla + hung curd dip',p:16,how:'Grind soaked dal with green chilli, jeera, salt. 2 chillas. Dip: hung curd + mint + chaat masala.',night:'Soak ½ cup yellow moong dal (tomorrow’s breakfast chilla).'},
     l:{n:'1 cup rice + rajma + cucumber raita + salad',p:15,how:'Rajma in tomato gravy with Jain spices.',night:'Soak ¾ cup rajma (tomorrow’s lunch).',morn:'Pressure-cook the soaked rajma (6–7 whistles) while you eat; make rice and raita; pack.'},
     s:{n:'30 g roasted chana',p:6,how:'From the packet into a small bowl, not straight from the packet.'},
-    d:{n:'Moong dal soup + 1 roti + 75 g paneer tikka',p:24,how:'¼ cup moong dal, 2 whistles, temper with jeera. Paneer cubes + curd + spices, pan-sear 5 min.'}},
+    d:{n:'Broccoli-mushroom-paneer stir-fry (75 g paneer) + moong soup',p:26,how:'1 tsp oil, jeera, chilli flakes. Broccoli florets 3 min, sliced mushroom + capsicum 3 min, paneer cubes, black pepper, salt, lemon. No soy sauce (no soya). Soup: ¼ cup moong dal, 2 whistles, jeera tadka. Skip mushroom if you keep it Jain.'}},
   wed:{
-    b:{n:'Jain poha with peanuts + bowl of curd',p:11,how:'Rinse poha. Temper mustard seeds, curry leaves, peanuts, turmeric, chilli. Lemon on top.'},
+    b:{n:'Matar poha with peanuts + bowl of curd',p:13,how:'Rinse poha. Temper mustard seeds, curry leaves, peanuts, turmeric, chilli, add ½ cup fresh winter matar for 3 min. Lemon on top.'},
     l:{n:'2 roti + Jain chana masala + curd + salad',p:18,how:'Tomato-based masala, no onion or garlic.',night:'Soak ½ cup kabuli chana (tomorrow’s lunch).',morn:'Pressure-cook soaked chana (5–6 whistles), make masala and 2 roti, pack.'},
     s:{n:'Chaas with jeera + 1 fruit',p:6,how:'1 glass buttermilk, roasted jeera, black salt.'},
-    d:{n:'Thick dal + 1 roti + sabzi + raita + 75 g paneer cubes',p:31,how:'¼ cup toor or moong dal, any Jain sabzi (bhindi, beans, capsicum). Paneer pan-seared with chaat masala.'}},
+    d:{n:'Matar paneer (100 g paneer) + 1 roti + methi raita',p:28,how:'Tomato-green chilli purée, jeera, hing, haldi, kasuri methi. Add ½ cup matar + paneer, simmer 5 min. Raita: curd + finely chopped fresh methi sautéed 1 min + roasted jeera.'}},
   thu:{
     b:{n:'2 besan chilla + bowl of curd',p:18,how:'Same as Monday. Stuff with 30 g grated paneer for +5 g protein.'},
-    l:{n:'2 moong dal chilla + hung curd dip + sabzi',p:18,how:'Grind soaked dal, make chillas, quick sabzi.',night:'Soak ½ cup yellow moong dal + hang 250 g curd in a muslin cloth (tomorrow’s lunch).',morn:'Grind dal, make 2 chillas + quick sabzi, pack with the hung curd dip.'},
+    l:{n:'2 palak moong dal chilla + hung curd dip + sabzi',p:18,how:'Grind soaked dal with a handful of palak, green chilli, jeera. Make chillas, quick sabzi.',night:'Soak ½ cup yellow moong dal + hang 250 g curd in a muslin cloth (tomorrow’s lunch).',morn:'Grind dal, make 2 chillas + quick sabzi, pack with the hung curd dip.'},
     s:{n:'30 g roasted chana + chaas',p:8,how:'Small bowl of chana, 1 glass buttermilk with jeera.'},
-    d:{n:'Thick mixed dal + 1 roti + bhindi sabzi + raita',p:17,how:'Mixed dal, 3 whistles.'}},
+    d:{n:'Thick mixed dal + 1 roti + methi-matar sabzi + raita',p:18,how:'Mixed dal, 3 whistles. Sabzi: jeera, hing, chopped fresh methi + ½ cup matar, 6–7 min, pinch of sugar to cut the bitterness.'}},
   fri:{
     b:{n:'Pesarattu + chutney + 10 almonds',p:16,how:'Grind soaked whole moong with green chilli, jeera, salt. Spread thin on tawa.',night:'Soak ½ cup whole green moong (tomorrow’s pesarattu).'},
     l:{n:'2 roti + mixed dal + 75 g paneer bhurji + salad',p:24,how:'Paneer bhurji with tomato and capsicum.',morn:'Cook mixed dal (3 whistles), make paneer bhurji, 2 roti, pack.'},
     s:{n:'Roasted makhana + chaas',p:6,how:'1 cup makhana dry-roasted with a pinch of salt and pepper.'},
-    d:{n:'Whole-wheat veg pasta in hung-curd sauce',p:18,how:'60 g dry pasta + capsicum, tomato, beans. Sauce: hung curd + chilli flakes + oregano, off the heat.',night:'Hang 250 g curd (tomorrow’s pasta sauce).'}},
+    d:{n:'Whole-wheat pasta with broccoli + mushroom in hung-curd sauce',p:19,how:'60 g dry pasta. Sauté broccoli, mushroom, capsicum, tomato with chilli flakes + oregano. Off the heat, stir in hung curd + 1 tbsp grated paneer. Skip mushroom if you keep it Jain.',night:'Hang 250 g curd (tomorrow’s pasta sauce).'}},
   sat:{
     b:{n:'Moong dal chilla + curd + 10 almonds',p:18,how:'Grind soaked dal with green chilli, jeera, salt. Shake comes after the gym today.',night:'Soak ½ cup yellow moong dal (tomorrow’s breakfast).'},
     l:{n:'Moong dal khichdi + curd + salad',p:16,how:'½ cup rice + ¼ cup moong dal, 3 whistles, ghee tadka (1 tsp).'},
     s:{n:'Fruit + bowl of curd',p:7,how:'Any seasonal fruit.'},
-    d:{n:'Besan chilla + sabzi + raita',p:18,how:'Same as Monday’s chilla.'}},
+    d:{n:'Palak pesto pasta (60 g) + 50 g paneer',p:20,how:'Blend blanched palak + basil (optional) + 10 almonds + 1 tsp olive oil + green chilli + lemon + salt. Toss with whole-wheat pasta and pan-seared paneer.'}},
   sun:{
     b:{n:'Jain poha with peanuts + curd + 1 scoop whey shake',p:37,how:'Weekend: the shake goes with breakfast.'},
-    l:{n:'Dal-rice + raita + salad',p:15,how:'Use part of today’s batch dal.'},
-    s:{n:'30 g roasted chana',p:6,how:'Small bowl.'},
-    d:{n:'Paneer tikka (100 g) + sautéed veg + 1 roti',p:22,how:'Marinate in curd + spices, pan-sear.'}}
+    l:{n:'Palak dal + rice + raita',p:17,how:'Use part of today’s batch dal, stir in chopped palak for 3 min. Jeera-hing tadka.'},
+    s:{n:'30 g roasted chana + 1 amla',p:6,how:'Small bowl. Amla: winter vitamin C, good for hair and skin.'},
+    d:{n:'Paneer tikka (100 g) + grilled broccoli + capsicum + 1 roti',p:24,how:'Marinate paneer, broccoli and capsicum in curd + spices, pan-sear or air-fry 8–10 min.'}}
 };
 /* ---------- editable plan: defaults + your saved changes ---------- */
 const clone=o=>JSON.parse(JSON.stringify(o));
@@ -222,8 +222,8 @@ const ONCE={
   '2027-03-10':{id:'goal3',m:422,title:'Checkpoint: −15 kg, beach body',d:'Morning weigh-in + evening scan. Photos.'},
   '2027-03-27':{id:'bday',m:600,title:'Birthday 🎂',d:'Photos, celebrate, then set the next goal.'}
 };
-const BATCH=['Alsi for the week: dry-roast 7 tbsp for 2 min, cool, grind coarse → airtight jar in the fridge (keeps ~1 week)','Pressure-cook 1½ cups toor or moong dal → fridge (Mon lunch + extra)','Boil the soaked kala chana (5 whistles) with hing → fridge (chaat as a lunch side Mon–Tue)','Wash and chop lauki, beans, capsicum, tomato, cucumber into boxes','Make green chutney: coriander + green chilli + lemon + salt','Restock: besan, moong dal, roasted chana, makhana, paneer, milk, fruit'];
-const SHOP=['Besan 1 kg (lasts ~2 weeks)','Yellow moong dal 1 kg','Whole green moong 500 g','Kabuli chana + kala chana + rajma 500 g each','Roasted chana 500 g, makhana 200 g','Milk 1 L/day (for curd)','Paneer 250–300 g/week','Seasonal veg: lauki, beans, capsicum, bhindi, tomato, cucumber','Fruit: bananas (7–9), apples or papaya','Whole-wheat pasta 500 g','Whey: 1 kg lasts ~1 month'];
+const BATCH=['Alsi for the week: dry-roast 7 tbsp for 2 min, cool, grind coarse → airtight jar in the fridge (keeps ~1 week)','Pressure-cook 1½ cups toor or moong dal → fridge (Mon lunch + extra)','Boil the soaked kala chana (5 whistles) with hing → fridge (chaat as a lunch side Mon–Tue)','Wash and chop lauki, beans, capsicum, tomato, cucumber into boxes; broccoli into florets; shell the matar','Wash palak + methi, dry on a cloth, store in a box lined with paper (keeps 4–5 days)','Make green chutney: coriander + green chilli + lemon + salt','Restock: besan, moong dal, roasted chana, makhana, paneer, milk, fruit'];
+const SHOP=['Besan 1 kg (lasts ~2 weeks)','Yellow moong dal 1 kg','Whole green moong 500 g','Kabuli chana + kala chana + rajma 500 g each','Roasted chana 500 g, makhana 200 g','Milk 1 L/day (for curd)','Paneer 250–300 g/week','Winter veg: palak (3–4 bunches), methi, fresh matar 500 g, broccoli 2, mushroom 200 g, capsicum, tomato, lauki, beans, cucumber','Amla (1 a day in winter)','Fruit: bananas (7–9), apples or papaya','Whole-wheat pasta 500 g','Whey: 1 kg lasts ~1 month'];
 
 
 /* ---------- build a day ---------- */
