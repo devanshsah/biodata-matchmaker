@@ -334,8 +334,8 @@ const DAY_TITLE = {
   wed: ["Walk day", "Long walk, easy evening."],
   thu: ["Glutes + hamstrings", "Morning lift, evening dance."],
   fri: ["Upper body B", "Undo the desk slouch."],
-  sat: ["Dance Saturday", "Walk in the morning, dance at night."],
-  sun: ["Reset day", "Recover, prep, plan the week."],
+  sat: ["Saturday sweat", "Study, noon workout, evening free."],
+  sun: ["Free Sunday", "Reset, socialise, prep the week."],
 };
 
 /* Three scores, Whoop-style: DAY (tasks done), EFFORT (0–21 from training), FUEL (protein eaten vs target). */
@@ -682,9 +682,9 @@ function Gym({ sel, today, done, toggle, clear, kg, setKg }) {
   return (
     <>
       <div className="dayhead">
-        <div className="eyebrow">{NAME[p.k]} {fmtD(sel)}{isT ? " · today" : ""} · {g ? fmtT(p.train.find((x) => x.gym).m) : "6:30 pm"}{p.train.some((x) => x.id === "eve") ? " · dance 6:30 pm" : ""}</div>
+        <div className="eyebrow">{NAME[p.k]} {fmtD(sel)}{isT ? " · today" : ""} · {g ? fmtT(p.train.find((x) => x.gym).m) : "6:30 pm"}{p.train.some((x) => x.id === "eve" && x.title.startsWith("Dance")) ? " · dance 6 pm" : ""}</div>
         <h2>{g ? title : "No gym session"}</h2>
-        <p className="tag">{g ? sub : p.k === "wed" ? "Long walk in the morning. Easy evening." : p.k === "sat" ? "Dance class tonight." : "Recovery is training too. Walk, stretch, prep."}</p>
+        <p className="tag">{g ? sub : p.k === "wed" ? "Long walk in the morning. Easy evening." : p.k === "sat" ? "Noon workout: the gym session you missed, full body, or a walk-jog." : "Recovery is training too. Walk, stretch, prep."}</p>
         {g && <div className="chips"><span className="chip">warm-up first</span><span className="chip">same weight every set</span><span className="chip">stop 1–2 reps early</span></div>}
       </div>
       {g ? <GymBlock ex={g.gym} done={done} onTick={(id) => toggle(dk, id)} kg={kg} setKg={setKg} /> : <div className="note">Use the day strip above to peek at the next gym day.</div>}
