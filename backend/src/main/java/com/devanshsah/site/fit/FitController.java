@@ -112,6 +112,22 @@ public class FitController {
         return Map.of("ok", true);
     }
 
+    public record OneTick(Boolean done) {}
+
+    /** Ticks or unticks one task. Used by the "Log it" button on notifications, so it never overwrites the rest of the day. */
+    @PostMapping("/ticks/{day}/{item}")
+    @Transactional
+    public Map<String, Object> tickOne(@PathVariable String day, @PathVariable String item, @RequestBody(required = false) OneTick body) {
+        LocalDate ld = parseDay(day);
+        if (item == null || item.isBlank() || item.length() > 40) throw ApiErrors.bad("Bad item");
+        java.sql.Date d = java.sql.Date.valueOf(ld);
+        boolean done = body == null || body.done() == null || body.done();
+        if (done) db.update("INSERT INTO fit_ticks (day, item, done) VALUES (?, ?, TRUE) ON CONFLICT (day, item) DO UPDATE SET done = TRUE, updated_at = now()", d, item);
+        else db.update("DELETE FROM fit_ticks WHERE day = ? AND item = ?", d, item);
+        reminders.setTicks(ld, new java.util.HashSet<>(db.queryForList("SELECT item FROM fit_ticks WHERE day = ? AND done", String.class, d)));
+        return Map.of("ok", true, "done", done);
+    }
+
     /* ---------- weights used per exercise ---------- */
 
     public record Kg(String name, String value) {}

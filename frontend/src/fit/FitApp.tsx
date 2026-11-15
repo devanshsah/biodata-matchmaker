@@ -22,7 +22,7 @@ const KIND_LABEL = { lift: "Strength", cardio: "Cardio", food: "Eat", prep: "Pre
 const clampDay = (d) => (d < FIRST ? FIRST : d > LAST ? LAST : d);
 const shorten = (t, n = 140) => (t && t.length > n ? t.slice(0, n - 1) + "…" : t || "");
 const lineOf = (x) => x.d || (x.list ? x.list[0] + (x.list.length > 1 ? ` (+${x.list.length - 1} more)` : "") : "");
-const gymDone = (done) => Object.keys(done || {}).some((k) => k.startsWith("g") && done[k]);
+const gymDone = (done) => Object.keys(done || {}).some((k) => (k === "gym" || /^g\d+:\d+$/.test(k)) && done[k]);
 const isDoneItem = (x, done) => (x.gym ? gymDone(done) : !!(done || {})[x.id]);
 
 /* ---------------- root ---------------- */
@@ -104,13 +104,20 @@ export default function FitApp() {
         const i = (seen[moment] = (seen[moment] ?? -1) + 1);
         return pool[(dayN + i) % pool.length];
       };
-      for (const x of plan(d).all) {
+      const dayAll = plan(d).all;
+      // A slot ends when the next thing starts (work ends at 7 pm), kept between 15 min and 3 h.
+      const endOf = (x) => {
+        if (x.id === "work") return 1140;
+        const nx = dayAll.find((y) => y.m > x.m);
+        return Math.min(x.m + 180, Math.max(x.m + 15, nx ? nx.m : x.m + 30));
+      };
+      for (const x of dayAll) {
         const info = shorten(x.list ? x.list.join(" • ") : x.d);
         const line = pick(momentOf(x));
         items.push({ day: iso(d), item: x.id, kind: "start", minute: x.m, title: `${fmtT(x.m)} · ${x.title}`, body: line ? `${line}\n${info}` : info });
         if (counts(x) && x.id !== "kc") {
           const roast = pick("late");
-          items.push({ day: iso(d), item: x.id, kind: "late", minute: x.m + 30, title: `${x.title}: still waiting`, body: `${roast ? roast + " " : ""}Planned for ${fmtT(x.m)}, not ticked yet.` });
+          items.push({ day: iso(d), item: x.id, kind: "late", minute: endOf(x), title: `${x.title} — done?`, body: `${roast ? roast + " " : ""}Tap “Log it” (or tap here) to mark it done.` });
         }
       }
     }
@@ -172,6 +179,36 @@ export default function FitApp() {
     setTicks((t) => ({ ...t, [day]: cur }));
     api("PUT", `/api/fit/ticks/${day}`, cur).catch(() => {});
   }, []);
+  // "Log it" from a notification: tick one task, show a toast with Undo.
+  const [toast, setToast] = useState(null);
+  const markDone = useCallback((day, item, alreadySaved) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(day || "") || !item) return;
+    const x = plan(new Date(day + "T00:00:00")).all.find((y) => y.id === item);
+    if (!(ticksRef.current[day] || {})[item]) {
+      setTicks((t) => ({ ...t, [day]: { ...(t[day] || {}), [item]: true } }));
+      if (!alreadySaved) api("POST", `/api/fit/ticks/${day}/${encodeURIComponent(item)}`, { done: true }).catch(() => setToast({ day, item, title: "Couldn’t log it. Tick it on the Today tab.", err: true }));
+    }
+    setToast({ day, item, title: x ? x.title : item });
+  }, []);
+  const undoLog = useCallback((t) => {
+    setTicks((all) => { const cur = { ...(all[t.day] || {}) }; delete cur[t.item]; return { ...all, [t.day]: cur }; });
+    api("POST", `/api/fit/ticks/${t.day}/${encodeURIComponent(t.item)}`, { done: false }).catch(() => {});
+    setToast(null);
+  }, []);
+  useEffect(() => {
+    if (!ready) return;
+    const q = new URLSearchParams(location.search).get("log");
+    if (q) {
+      const [day, item] = q.split("|");
+      markDone(day, item);
+      history.replaceState(null, "", location.pathname);
+    }
+    if (!("serviceWorker" in navigator)) return;
+    const onMsg = (e) => { const m = e.data || {}; if (m.type === "log") markDone(m.day, m.item); if (m.type === "logged") markDone(m.day, m.item, true); };
+    navigator.serviceWorker.addEventListener("message", onMsg);
+    return () => navigator.serviceWorker.removeEventListener("message", onMsg);
+  }, [ready, markDone]);
+  useEffect(() => { if (!toast) return; const id = setTimeout(() => setToast(null), 6000); return () => clearTimeout(id); }, [toast]);
   const clearTicks = useCallback((day) => {
     setTicks((t) => ({ ...t, [day]: {} }));
     api("PUT", `/api/fit/ticks/${day}`, {}).catch(() => {});
@@ -201,6 +238,12 @@ export default function FitApp() {
 
   return (
     <div className="fit">
+      {toast && (
+        <div className={`toast${toast.err ? " err" : ""}`} role="status">
+          <span>{toast.err ? toast.title : <>Logged ✓ <b>{toast.title}</b></>}</span>
+          {!toast.err && <button type="button" onClick={() => undoLog(toast)}>Undo</button>}
+        </div>
+      )}
       <TopBar now={now} streak={streakOf(ticks, today)} />
       <div className="wrap">
         {err && <div className="note">{err}</div>}

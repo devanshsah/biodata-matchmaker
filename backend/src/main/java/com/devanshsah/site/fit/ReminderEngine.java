@@ -108,7 +108,7 @@ public class ReminderEngine {
 
     private boolean isDone(LocalDate day, String item) {
         Set<String> s = ticks.getOrDefault(day, Set.of());
-        if ("gym".equals(item)) return s.stream().anyMatch(x -> x.startsWith("g") && x.contains(":"));
+        if ("gym".equals(item)) return s.contains("gym") || s.stream().anyMatch(x -> x.startsWith("g") && x.contains(":"));
         return s.contains(item);
     }
 }

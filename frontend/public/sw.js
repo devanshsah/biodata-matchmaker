@@ -1,24 +1,63 @@
-// Service worker: shows reminders pushed by the server and opens the app when tapped.
+// Service worker: shows reminders pushed by the server.
+// End-of-slot reminders carry a "Log it" button (Android/desktop) that ticks the task without opening the app.
+// iPhone doesn't show web-notification buttons, so tapping the notification opens the app and logs it there.
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
 
+const ICON = '/fit-assets/icon-192.png';
+// tag = "YYYY-MM-DD-<item>-<kind>"
+function parseTag(tag) {
+  const m = /^(\d{4}-\d{2}-\d{2})-(.+)-(start|late)$/.exec(tag || '');
+  return m ? { day: m[1], item: m[2], kind: m[3] } : null;
+}
+const appUrl = (q) => (self.registration.scope.includes('://fit.') ? '/' : '/fit') + (q ? '?' + q : '');
+
 self.addEventListener('push', (event) => {
   let data = {};
-  try { data = event.data ? event.data.json() : {}; } catch (e) { data = { title: 'Training Card', body: event.data && event.data.text() }; }
-  event.waitUntil(self.registration.showNotification(data.title || 'Training Card', {
+  try { data = event.data ? event.data.json() : {}; } catch (e) { data = { title: 'DEVANSH.OS', body: event.data && event.data.text() }; }
+  const t = parseTag(data.tag);
+  const loggable = t && t.kind === 'late';
+  event.waitUntil(self.registration.showNotification(data.title || 'DEVANSH.OS', {
     body: data.body || '',
     tag: data.tag || undefined,
-    icon: '/icons/icon-192.png',
-    badge: '/icons/icon-192.png',
-    data: {}
+    icon: ICON,
+    badge: ICON,
+    data: t || {},
+    actions: loggable ? [{ action: 'log', title: 'Log it ✓' }, { action: 'open', title: 'Open' }] : []
   }));
 });
 
+async function logTask(day, item) {
+  const r = await fetch(`/api/fit/ticks/${day}/${encodeURIComponent(item)}`, {
+    method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ done: true })
+  });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+}
+
 self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
+  const n = event.notification, t = n.data || {};
+  n.close();
   event.waitUntil((async () => {
     const all = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    for (const c of all) { if ('focus' in c) return c.focus(); }
-    return self.clients.openWindow(self.registration.scope.includes('fit.') ? '/' : '/fit');
+    // Button: log in the background, no app.
+    if (event.action === 'log' && t.day && t.item) {
+      try {
+        await logTask(t.day, t.item);
+        all.forEach((c) => c.postMessage({ type: 'logged', day: t.day, item: t.item }));
+        await self.registration.showNotification('Logged ✓', { body: n.title.replace(/ — done\?$/, ''), tag: 'logged-' + n.tag, icon: ICON, silent: true });
+      } catch (e) {
+        await self.registration.showNotification('Couldn’t log it', { body: 'Open the app and tick it there.', tag: 'logged-' + n.tag, icon: ICON });
+      }
+      return;
+    }
+    // Tap on an end-of-slot reminder (the iPhone path): open the app and let it log the task.
+    const q = t.kind === 'late' && event.action !== 'open' ? 'log=' + encodeURIComponent(t.day + '|' + t.item) : '';
+    for (const c of all) {
+      if ('focus' in c) {
+        if (q) c.postMessage({ type: 'log', day: t.day, item: t.item });
+        return c.focus();
+      }
+    }
+    return self.clients.openWindow(appUrl(q));
   })());
 });
