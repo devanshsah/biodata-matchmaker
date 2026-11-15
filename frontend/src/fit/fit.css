@@ -370,3 +370,13 @@
 .fit .meme-list li.off p { color: var(--muted); text-decoration: line-through; }
 .fit .meme-edit { display: grid; gap: 10px; }
 .fit .btn.danger { color: var(--low); }
+
+/* ---------- targets + career ---------- */
+.fit .stat b.t-good { color: var(--good); } .fit .stat b.t-mid { color: var(--mid); } .fit .stat b.t-low { color: var(--low); }
+.fit .career { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.fit .career li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); }
+.fit .career li:first-child { border-top: 0; }
+.fit .career span { display: grid; font-size: 15px; } .fit .career small { font-size: 12px; color: var(--muted); }
+.fit .career .step { display: flex; align-items: center; gap: 10px; }
+.fit .career .step b { min-width: 28px; text-align: center; font-family: var(--display); font-size: 24px; }
+.fit .career .step .btn { min-width: 44px; min-height: 44px; padding: 0; font-size: 20px; }

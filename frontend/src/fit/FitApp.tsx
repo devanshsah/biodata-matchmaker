@@ -8,7 +8,7 @@ import * as P from "./plan.js";
 import "./fit.css";
 import StoryShare, { storyStats } from "./StoryShare";
 
-const { plan, setOVR, getOVR, applyOVR, ist, iso, addDays, keyOf, fmtT, fmtD, START, WARMUP_START, WEEKS, KEYS, NAME, SHORT, GYM, WARM, STUDY, MENU, DEF, clone, weekOf, phaseOf, SHOP } = P;
+const { plan, setOVR, getOVR, applyOVR, ist, iso, addDays, keyOf, fmtT, fmtD, START, WARMUP_START, WEEKS, KEYS, NAME, SHORT, GYM, WARM, STUDY, MENU, DEF, clone, weekOf, phaseOf, SHOP, GOALS, SCANS, studyFor, careerOf } = P;
 
 const FIRST = WARMUP_START;
 const mondayOf = (d) => addDays(d, -((d.getDay() + 6) % 7));
@@ -108,7 +108,7 @@ export default function FitApp() {
         const info = shorten(x.list ? x.list.join(" • ") : x.d);
         const line = pick(momentOf(x));
         items.push({ day: iso(d), item: x.id, kind: "start", minute: x.m, title: `${fmtT(x.m)} · ${x.title}`, body: line ? `${line}\n${info}` : info });
-        if (x.id !== "sleep") {
+        if (x.id !== "sleep" && x.id !== "kc") {
           const roast = pick("late");
           items.push({ day: iso(d), item: x.id, kind: "late", minute: x.m + 30, title: `${x.title}: still waiting`, body: `${roast ? roast + " " : ""}Planned for ${fmtT(x.m)}, not ticked yet.` });
         }
@@ -180,9 +180,9 @@ export default function FitApp() {
     setKgState((k) => ({ ...k, [name]: value }));
     api("PUT", "/api/fit/kg", { name, value }).catch(() => {});
   }, []);
-  const saveOVR = useCallback(async (what) => {
+  const saveOVR = useCallback(async (what, quiet) => {
     const o = getOVR();
-    o.log = [{ at: new Date().toISOString(), what }, ...(o.log || [])].slice(0, 25);
+    if (!quiet) o.log = [{ at: new Date().toISOString(), what }, ...(o.log || [])].slice(0, 25);
     applyOVR();
     setVer((v) => v + 1);
     await api("PUT", "/api/fit/overrides", o);
@@ -211,7 +211,7 @@ export default function FitApp() {
             <main hidden={tab !== "today"}>{tab === "today" && <Today {...common} done={selDone} toggle={toggleTick} kg={kg} setKg={setKg} openGym={() => { setTab("gym"); window.scrollTo({ top: 0 }); }} />}</main>
             <main hidden={tab !== "gym"}>{tab === "gym" && <Gym {...common} done={selDone} toggle={toggleTick} clear={clearTicks} kg={kg} setKg={setKg} />}</main>
             <main hidden={tab !== "meals"}>{tab === "meals" && <Meals {...common} done={selDone} toggle={toggleTick} />}</main>
-            <main hidden={tab !== "prog"}>{tab === "prog" && <Progress scans={scans} aiRead={aiRead} reload={reloadScans} today={today} />}</main>
+            <main hidden={tab !== "prog"}>{tab === "prog" && <Progress scans={scans} aiRead={aiRead} reload={reloadScans} today={today} saveOVR={saveOVR} ver={ver} />}</main>
             <main hidden={tab !== "edit"}>{tab === "edit" && <Edit sel={sel} ver={ver} saveOVR={saveOVR} vapid={vapid} memes={memes} onMemes={(m) => { memesRef.current = m; setMemes(m); syncReminders(); }} />}</main>
           </>
         )}
@@ -639,8 +639,8 @@ function HowTo({ dk, clear }) {
         <li>Numbness in the groin, inner thighs or around the anus</li><li>New trouble holding or passing urine or stool</li><li>Weakness in both legs</li></ul></div></details>
       <details className="box"><summary>Check-ins</summary><div className="in"><ul>
         <li>Weigh Mon, Wed, Fri, Sun mornings. Watch the weekly average, not single days.</li>
-        <li>On pace: average dropping 0.5–0.8 kg a week. Two flat weeks: cut one roti or a small bowl of rice a day.</li>
-        <li>Waist at the belly button every other Sunday.</li><li>Body scans: Mon 16 Nov (start), Sat 5 Dec and Sat 26 Dec, evening.</li></ul></div></details>
+        <li>Targets: {GOALS.yearEnd.label}, then {GOALS.beach.label}. Body tab shows this week’s target weight. Two flat weeks: cut one roti or a small bowl of rice a day.</li>
+        <li>Waist at the belly button every other Sunday.</li><li>Body scans (evening): {SCANS.map((x) => fmtD(new Date(x + "T00:00:00"))).join(", ")}.</li></ul></div></details>
       <button className="reset" onClick={() => clear(dk)}>Clear this day’s ticks</button>
     </>
   );
@@ -738,7 +738,7 @@ async function shrink(file) {
   } catch { return file; }
 }
 
-function Progress({ scans, aiRead, reload, today }) {
+function Progress({ scans, aiRead, reload, today, saveOVR }) {
   const blank = () => ({ date: iso(today), time: "evening" });
   const [draft, setDraft] = useState(blank);
   const [file, setFile] = useState(null);
@@ -848,6 +848,9 @@ function Progress({ scans, aiRead, reload, today }) {
           </form>
         </details>
       </div>
+      <Targets scans={scans} today={today} saveOVR={saveOVR} />
+      <Career today={today} saveOVR={saveOVR} />
+
       <div className="sec">All scans</div>
       {!list.length ? <p style={{ color: "var(--muted)", fontSize: 14 }}>No scans yet. Add your first one above.</p> : (
         <div className="pt-wrap">
@@ -917,14 +920,22 @@ function Edit({ sel, ver, saveOVR, vapid, memes, onMemes }) {
     say("gym", "Saved");
   };
 
+  // Study topics follow the career phase; a saved change pins that weekday until you reset it.
+  const sfNow = studyFor(sel);
   const saveStudy = async (e) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget), s = (n) => String(fd.get(n) || "").trim();
-    const am = s("am") || DEF.study.am[k], pm = s("pm") || DEF.study.pm[k];
-    OVR.study.am[k] = am; OVR.study.pm[k] = pm; OVR.study.how[am] = s("amh"); OVR.study.how[pm] = s("pmh");
-    await saveOVR(`${NAME[k]} upskill → ${am} / ${pm}`);
+    delete OVR.study.am[k]; delete OVR.study.pm[k];
+    const base = studyFor(sel);
+    const am = s("am") || base.am, pm = base.pm ? (s("pm") || base.pm) : null;
+    if (am !== base.am) OVR.study.am[k] = am;
+    if (pm && pm !== base.pm) OVR.study.pm[k] = pm;
+    if (s("amh") && s("amh") !== (DEF.study.how[am] || "")) OVR.study.how[am] = s("amh");
+    if (pm && s("pmh") && s("pmh") !== (DEF.study.how[pm] || "")) OVR.study.how[pm] = s("pmh");
+    await saveOVR(`${NAME[k]} upskill → ${am}${pm ? " / " + pm : ""}`);
     say("study", "Saved");
   };
+  const resetStudy = async () => { delete OVR.study.am[k]; delete OVR.study.pm[k]; await saveOVR(`${NAME[k]} upskill back to the phase plan`); };
 
   const pushOn = async () => {
     try {
@@ -949,7 +960,7 @@ function Edit({ sel, ver, saveOVR, vapid, memes, onMemes }) {
       <div className="dayhead">
         <div className="eyebrow">Edit plan · every {NAME[k]}</div>
         <h2>Change your plan</h2>
-        <p style={{ margin: 0, color: "var(--muted)", fontSize: 14 }}>Pick a day above, see what’s planned, change it, save. It updates the Day plan and Meals tabs right away, for every {NAME[k]} until Dec 26. Saved to your database, so it syncs across devices.</p>
+        <p style={{ margin: 0, color: "var(--muted)", fontSize: 14 }}>Pick a day above, see what’s planned, change it, save. It updates the Day plan and Meals tabs right away, for every {NAME[k]} until 16 May. Saved to your database, so it syncs across devices.</p>
       </div>
       <div className="ed-sw">
         {[["meals", "Meals"], ["gym", "Workout"], ["study", "Upskill"], ["memes", "Memes"]].map(([v, t]) => <button key={v} aria-pressed={sec === v} onClick={() => setSec(v)}>{t}</button>)}
@@ -1007,12 +1018,14 @@ function Edit({ sel, ver, saveOVR, vapid, memes, onMemes }) {
       {sec === "study" && (
         <form className="ecard" key={`${k}-study-${ver}`} onSubmit={saveStudy}>
           <h3>Upskill · {NAME[k]}</h3>
-          <div className="cur"><b>Planned now</b>Morning: {STUDY.am[k]}<br />Evening: {STUDY.pm[k]}</div>
-          <div className="fld"><label htmlFor="sam">Morning topic (8:10–10:10 am)</label><input id="sam" name="am" defaultValue={STUDY.am[k]} /></div>
-          <div className="fld"><label htmlFor="samh">What to do in it</label><textarea id="samh" name="amh" defaultValue={STUDY.how[STUDY.am[k]] || ""} /></div>
-          <div className="fld"><label htmlFor="spm">Evening topic ({k === "sat" || k === "sun" ? "3:00–5:00 pm" : "8:30–10:30 pm"})</label><input id="spm" name="pm" defaultValue={STUDY.pm[k]} /></div>
-          <div className="fld"><label htmlFor="spmh">What to do in it</label><textarea id="spmh" name="pmh" defaultValue={STUDY.how[STUDY.pm[k]] || ""} /></div>
-          <div className="acts"><button className="btn" type="submit">Save</button><span className="saved" aria-live="polite">{flash.study}</span></div>
+          <div className="cur"><b>{sfNow.career.name} phase{STUDY.am[k] || STUDY.pm[k] ? " (your change)" : ""}</b>Morning: {sfNow.am}{sfNow.pm ? <><br />Evening: {sfNow.pm}</> : <><br />Evening: free (1 h a day after the switch)</>}</div>
+          <div className="fld"><label htmlFor="sam">Morning topic</label><input id="sam" name="am" defaultValue={sfNow.am} /></div>
+          <div className="fld"><label htmlFor="samh">What to do in it</label><textarea id="samh" name="amh" defaultValue={sfNow.amHow} /></div>
+          {sfNow.pm && <>
+            <div className="fld"><label htmlFor="spm">Evening topic ({k === "sat" || k === "sun" ? "3:00–5:00 pm" : "8:30–10:30 pm"})</label><input id="spm" name="pm" defaultValue={sfNow.pm} /></div>
+            <div className="fld"><label htmlFor="spmh">What to do in it</label><textarea id="spmh" name="pmh" defaultValue={sfNow.pmHow} /></div>
+          </>}
+          <div className="acts"><button className="btn" type="submit">Save</button>{(STUDY.am[k] || STUDY.pm[k]) && <button className="btn ghost" type="button" onClick={resetStudy}>Back to phase plan</button>}<span className="saved" aria-live="polite">{flash.study}</span></div>
         </form>
       )}
 
@@ -1122,6 +1135,94 @@ function Memes({ memes, onMemes }) {
           </div>
         );
       })}
+    </>
+  );
+}
+
+/* ---------- weight targets: −3 kg by 31 Dec, −15 kg by 10 Mar ---------- */
+const dOf = (x) => new Date(x + "T00:00:00");
+function targetFor(start, d) {
+  const t0 = START, t1 = dOf(GOALS.yearEnd.date), t2 = dOf(GOALS.beach.date);
+  if (d <= t0) return start;
+  if (d <= t1) return start - GOALS.yearEnd.kg * ((d - t0) / (t1 - t0));
+  if (d <= t2) return start - GOALS.yearEnd.kg - (GOALS.beach.kg - GOALS.yearEnd.kg) * ((d - t1) / (t2 - t1));
+  return start - GOALS.beach.kg;
+}
+function Targets({ scans, today, saveOVR }) {
+  const OVR = getOVR();
+  const log = OVR.weigh || {};
+  const [msg, setMsg] = useState("");
+  const startScan = [...scans].filter((x) => x.weight != null && x.date <= iso(START)).sort((a, b) => (a.date < b.date ? 1 : -1))[0];
+  const start = OVR.startKg || (startScan ? +startScan.weight : null);
+  const sun = addDays(today, (7 - ((today.getDay() + 6) % 7) - 1));
+  const week = Object.entries(log).filter(([d]) => d > iso(addDays(sun, -7)) && d <= iso(sun)).map(([, v]) => +v);
+  const avg = week.length ? week.reduce((a, b) => a + b, 0) / week.length : null;
+  const target = start ? targetFor(start, sun) : null;
+  const save = async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget), v = parseFloat(fd.get("kg")), sk = parseFloat(fd.get("start"));
+    const o = getOVR();
+    if (v > 30 && v < 250) { o.weigh = { ...(o.weigh || {}), [iso(today)]: Math.round(v * 10) / 10 }; }
+    if (sk > 30 && sk < 250) o.startKg = sk;
+    await saveOVR("Weight logged", true);
+    setMsg("Saved");
+  };
+  const tone = avg == null || target == null ? "" : avg <= target ? "good" : avg <= target + 0.7 ? "mid" : "low";
+  return (
+    <>
+      <div className="sec">Targets</div>
+      <form className="ecard" onSubmit={save}>
+        <h3>Weight vs target</h3>
+        <div className="stats">
+          <div className="stat"><b>{start ? start.toFixed(1) : "—"}</b><span>Start (kg)</span></div>
+          <div className="stat"><b className={tone ? "t-" + tone : ""}>{avg != null ? avg.toFixed(1) : "—"}</b><span>This week’s avg</span></div>
+          <div className="stat"><b>{target ? target.toFixed(1) : "—"}</b><span>Target by Sun</span></div>
+        </div>
+        <p className="meme-note">{start ? `${GOALS.yearEnd.label}: ${(start - GOALS.yearEnd.kg).toFixed(1)} kg · ${GOALS.beach.label}: ${(start - GOALS.beach.kg).toFixed(1)} kg.` : "Add your start weight to see the targets."} −15 kg in 16 weeks is about 1 kg a week: hard but doable if protein stays high and the steps happen.</p>
+        <div className="frow">
+          <div className="fld"><label htmlFor="w-kg">Today’s weight (kg)</label><input id="w-kg" name="kg" type="number" step="0.1" inputMode="decimal" defaultValue={log[iso(today)] ?? ""} /></div>
+          <div className="fld"><label htmlFor="w-start">Start weight (kg)</label><input id="w-start" name="start" type="number" step="0.1" inputMode="decimal" defaultValue={start ?? ""} /></div>
+        </div>
+        <div className="acts"><button className="btn" type="submit">Save weight</button><span className="saved" aria-live="polite">{msg}</span></div>
+      </form>
+    </>
+  );
+}
+
+/* ---------- career counters, per week ---------- */
+const CAREER_FIELDS = [["dsa", "Problems solved"], ["apps", "Applications"], ["refs", "Referral asks"], ["ivs", "Interviews"], ["mocks", "Mock interviews"]];
+function Career({ today, saveOVR }) {
+  const mon = iso(addDays(today, -((today.getDay() + 6) % 7)));
+  const [c, setC] = useState(() => ({ ...((getOVR().career || {})[mon] || {}) }));
+  const all = getOVR().career || {};
+  const total = (f) => Object.values(all).reduce((a, w) => a + (+w[f] || 0), 0) - (+((all[mon] || {})[f]) || 0) + (+c[f] || 0);
+  const bump = async (f, n) => {
+    const next = { ...c, [f]: Math.max(0, (+c[f] || 0) + n) };
+    setC(next);
+    const o = getOVR();
+    o.career = { ...(o.career || {}), [mon]: next };
+    await saveOVR("Career log", true);
+  };
+  const ph = careerOf(weekOf(today));
+  return (
+    <>
+      <div className="sec">Career · {ph ? ph.name : ""}</div>
+      <div className="ecard">
+        <h3>This week</h3>
+        <ul className="career">
+          {CAREER_FIELDS.map(([f, l]) => (
+            <li key={f}>
+              <span>{l}<small>{total(f)} total</small></span>
+              <div className="step">
+                <button type="button" className="btn ghost small" aria-label={`One less: ${l}`} onClick={() => bump(f, -1)}>−</button>
+                <b>{+c[f] || 0}</b>
+                <button type="button" className="btn small" aria-label={`One more: ${l}`} onClick={() => bump(f, 1)}>+</button>
+              </div>
+            </li>
+          ))}
+        </ul>
+        <p className="meme-note">Weekly targets: 10–12 problems · from 28 Dec, 8 applications + 3 referral asks · from 25 Jan, 2 mocks. Offer target: 27 Feb.</p>
+      </div>
     </>
   );
 }

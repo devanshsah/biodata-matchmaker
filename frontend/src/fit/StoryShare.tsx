@@ -100,7 +100,7 @@ export function drawStory(canvas, st, today, steps) {
   ctx.strokeStyle = C.line; ctx.beginPath(); ctx.moveTo(L, y); ctx.lineTo(R, y); ctx.stroke();
 
   ctx.textAlign = "left"; ctx.textBaseline = "alphabetic"; ctx.font = `600 30px ${BODY}`; ctx.fillStyle = C.muted;
-  ctx.fillText("GOAL · LEAN & STRONG BY 26 DEC", L, Math.max(y + 80, 1620));
+  ctx.fillText("GOAL · −15 KG + NEW JOB BY MARCH", L, Math.max(y + 80, 1620));
 }
 
 export default function StoryShare({ open, onClose, today, stats }) {
