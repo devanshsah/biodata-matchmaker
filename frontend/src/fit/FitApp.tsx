@@ -330,11 +330,11 @@ const verdictOf = (pct, seed) => pick(SASS.verdict.filter(([min]) => pct >= min)
 const sassNow = (x, seed) => pick(SASS.now[x.id] || SASS.now[x.kind === "food" ? "food" : x.kind === "prep" ? "prep" : "work"] || ["Next up."], seed + x.id);
 const DAY_TITLE = {
   mon: ["Leg day", "Big muscles, big burn."],
-  tue: ["Upper body A", "Push, pull, posture."],
-  wed: ["Cardio + dance", "Engine day. Keep it fun."],
-  thu: ["Glutes + hamstrings", "Strong hips, happy back."],
+  tue: ["Upper body A", "Lift at dawn, dance at dusk."],
+  wed: ["Walk day", "Long walk, easy evening."],
+  thu: ["Glutes + hamstrings", "Morning lift, evening dance."],
   fri: ["Upper body B", "Undo the desk slouch."],
-  sat: ["Active Saturday", "Move first, brunch second."],
+  sat: ["Dance Saturday", "Walk in the morning, dance at night."],
   sun: ["Reset day", "Recover, prep, plan the week."],
 };
 
@@ -599,7 +599,7 @@ function WeekGrid({ sel, today }) {
     ["6:30 am", (p) => { const x = p.train.find((t) => t.id === "walk"); return <Cell k="cardio" b={x.title} />; }],
     ["8:10 am", (p) => { const x = p.train.find((t) => t.id === "st1"); return <Cell k="study" b="Upskill 2 h" s={x.title.split(" · ")[2]} />; }],
     ["Workday", (p) => (p.train.find((t) => t.id === "work") ? <Cell k="routine" b="Hourly breaks" s="2 L water" /> : <Cell k="rest" b="Off" />)],
-    ["6:30 pm", (p) => { const g = p.train.find((t) => t.id === "gym" || t.id === "eve"); return g ? <Cell k={g.kind} b={g.title.replace("Gym · ", "")} s={g.gym ? g.gym.filter((e) => !e.kind).map((e) => `${e.name} ${e.sr}`).join(" · ") : ""} /> : <Cell k="rest" b="Rest" s="Batch prep 5 pm" />; }],
+    ["Training", (p) => { const g = p.train.find((t) => t.id === "gym"), e = p.train.find((t) => t.id === "eve"); if (!g && !e) return <Cell k="rest" b="Rest" s="Batch prep 5 pm" />; const b = [g && `${g.title.replace("Gym · ", "")}${g.m < 720 ? " (am)" : ""}`, e && "Dance (pm)"].filter(Boolean).join(" + "); return <Cell k={g ? g.kind : e.kind} b={b} s={g ? g.gym.filter((x) => !x.kind).map((x) => `${x.name} ${x.sr}`).join(" · ") : ""} />; }],
     ["Evening", (p) => { const x = p.train.find((t) => t.id === "st2"); return <Cell k="study" b="Upskill 2 h" s={(p.k === "sat" || p.k === "sun" ? "3 pm · " : "8:30 pm · ") + x.title.split(" · ")[2]} />; }],
     ["10:30 pm", () => <Cell k="routine" b="Core + stretch" />],
   ];
@@ -682,9 +682,9 @@ function Gym({ sel, today, done, toggle, clear, kg, setKg }) {
   return (
     <>
       <div className="dayhead">
-        <div className="eyebrow">{NAME[p.k]} {fmtD(sel)}{isT ? " · today" : ""} · 6:30 pm</div>
+        <div className="eyebrow">{NAME[p.k]} {fmtD(sel)}{isT ? " · today" : ""} · {g ? fmtT(p.train.find((x) => x.gym).m) : "6:30 pm"}{p.train.some((x) => x.id === "eve") ? " · dance 6:30 pm" : ""}</div>
         <h2>{g ? title : "No gym session"}</h2>
-        <p className="tag">{g ? sub : p.k === "wed" ? "Dance class and a long walk. Engine day." : p.k === "sat" ? "Dance or a 60-minute walk." : "Recovery is training too. Walk, stretch, prep."}</p>
+        <p className="tag">{g ? sub : p.k === "wed" ? "Long walk in the morning. Easy evening." : p.k === "sat" ? "Dance class tonight." : "Recovery is training too. Walk, stretch, prep."}</p>
         {g && <div className="chips"><span className="chip">warm-up first</span><span className="chip">same weight every set</span><span className="chip">stop 1–2 reps early</span></div>}
       </div>
       {g ? <GymBlock ex={g.gym} done={done} onTick={(id) => toggle(dk, id)} kg={kg} setKg={setKg} /> : <div className="note">Use the day strip above to peek at the next gym day.</div>}

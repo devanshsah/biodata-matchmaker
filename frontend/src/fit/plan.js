@@ -88,7 +88,8 @@ const STUDY={
     'Portfolio project':'Build one project that shows the skills of your target role. Commit something every session.',
     'Resume + job applications':'Update resume with numbers from your mPoint work. Apply to 5–10 roles, message 3 people.'}
 };
-const FOCUS={mon:'Legs',tue:'Upper',wed:'Dance',thu:'Glutes',fri:'Upper',sat:'Active',sun:'Rest'};
+const FOCUS={mon:'Legs',tue:'Upper+Dance',wed:'Walk',thu:'Glutes+Dance',fri:'Upper',sat:'Dance',sun:'Rest'};
+const DANCE=['tue','thu','sat'], AM_GYM=['tue','thu'];
 
 /* ---------- meals (Jain, no oats, no soya) ---------- */
 // night = prep the evening BEFORE; morn = cooking at 7:45 am same day
@@ -148,31 +149,31 @@ const SHOP=['Besan 1 kg (lasts ~2 weeks)','Yellow moong dal 1 kg','Whole green m
 function plan(d){
   const k=keyOf(d), w=Math.min(weekOf(d),WEEKS), ph=phaseOf(w), gymDay=!!GYM[k];
   const m=MENU[k], tm=MENU[keyOf(addDays(d,1))], train=[], meals=[], prep=[];
-  const weigh=['mon','wed','fri','sun'].includes(k);
-  train.push({id:'wake',m:375,kind:'routine',title:'Wake up'+(weigh?' + weigh in':''),d:'500 ml water. Coffee now is fine; none after 2 pm.'+(weigh?' Weigh after the bathroom, before coffee. Note it down.':'')});
-  if(k==='wed'||k==='sun') train.push({id:'walk',m:390,kind:'cardio',title:'Long walk · 45 min',d:'Talking pace, ~115–135 bpm.'+(k==='sun'?' Then 15 min mobility.':'')});
+  const weigh=['mon','wed','fri','sun'].includes(k), dance=DANCE.includes(k), amGym=gymDay&&AM_GYM.includes(k);
+  train.push({id:'wake',m:375,kind:'routine',title:'Wake up'+(weigh?' + weigh in':''),d:'500 ml water. '+(amGym?'Banana + coffee, then straight to the gym.':'Coffee now is fine; none after 2 pm.')+(weigh?' Weigh after the bathroom, before coffee. Note it down.':'')});
+  if(amGym) train.push({id:'gym',m:390,kind:'lift',title:'Gym · '+GYM[k].title,d:'6:30–7:40 am, before work. Dance tonight, so skip the cardio finisher if your legs feel heavy. Tap a box after each set.',gym:exFor(k,ph)});
+  else if(k==='wed'||k==='sun') train.push({id:'walk',m:390,kind:'cardio',title:'Long walk · 45 min',d:'Talking pace, ~115–135 bpm.'+(k==='sun'?' Then 15 min mobility.':'')});
   else train.push({id:'walk',m:390,kind:'cardio',title:'Morning walk · '+ph.walk,d:'Brisk, talking pace. Walk-jog (2 min walk / 1 min jog) only after a physio clears running.'});
   const amT=STUDY.am[k], pmT=STUDY.pm[k], wkEnd=(k==='sat'||k==='sun');
-  train.push({id:'st1',m:490,kind:'study',title:'Upskill · 2 h · '+amT,d:'8:10–10:10 am. Phone on silent. '+STUDY.how[amT]});
+  train.push(amGym?{id:'st1',m:495,kind:'study',title:'Upskill · 2 h · '+amT,d:'8:15–10:15 am. Phone on silent. '+STUDY.how[amT]}:{id:'st1',m:490,kind:'study',title:'Upskill · 2 h · '+amT,d:'8:10–10:10 am. Phone on silent. '+STUDY.how[amT]});
   if(k!=='sat'&&k!=='sun') train.push({id:'work',m:615,kind:'routine',title:'Workday habits',d:'Stand and walk 2–3 min every hour. Screen at eye level. 2 L water. Chin tucks ×10, three times.'});
   const scan=['2026-11-16','2026-12-05','2026-12-26'].includes(iso(d));
   if(scan) train.push({id:'scan',m:1095,kind:'routine',title:'Body scan at the gym',d:'Before training, same evening time as your past scans. No big meal in the 2 hours before.'});
-  if(gymDay) train.push({id:'gym',m:1110,kind:'lift',title:'Gym · '+GYM[k].title,d:'6:30–7:40 pm. Tap a box after each set.',gym:exFor(k,ph)});
-  else if(k==='wed') train.push({id:'eve',m:1110,kind:'cardio',title:'Dance class',d:'No class? 20 min easy bike + core circuit at the gym.'});
-  else if(k==='sat') train.push({id:'eve',m:1110,kind:'cardio',title:'Dance or 60 min walk',d:'Weekend cardio.'});
+  if(gymDay&&!amGym) train.push({id:'gym',m:1110,kind:'lift',title:'Gym · '+GYM[k].title,d:'6:30–7:40 pm. Tap a box after each set.',gym:exFor(k,ph)});
+  if(dance) train.push({id:'eve',m:1110,kind:'cardio',title:'Dance class',d:amGym?'You lifted this morning: hydrate, and go easy on jumps and deep twists.':'No class? 60 min brisk walk instead.'});
   train.push(wkEnd?{id:'st2',m:900,kind:'study',title:'Upskill · 2 h · '+pmT,d:'3:00–5:00 pm. '+STUDY.how[pmT]}:{id:'st2',m:1230,kind:'study',title:'Upskill · 2 h · '+pmT,d:'8:30–10:30 pm. '+STUDY.how[pmT]});
   train.push({id:'core',m:1350,kind:'routine',title:'Core + stretch · 20 min',d:'Bird dog, side plank, curl-up, glute bridge, then stretches. Details below.'});
   train.push({id:'sleep',m:1380,kind:'rest',title:'Lights out',d:'Cool room, 22–24 °C. Phone away. 7¼ h until 6:15.'});
 
-  meals.push({id:'b',m:450,kind:'food',title:'Breakfast',d:m.b.n,p:m.b.p,how:m.b.how});
+  meals.push(amGym?{id:'b',m:465,kind:'food',title:'Breakfast + post-gym shake',d:m.b.n+' + '+SHAKE.n,p:m.b.p+SHAKE.p,how:m.b.how+' Shake within 30 min of the gym.'}:{id:'b',m:450,kind:'food',title:'Breakfast',d:m.b.n,p:m.b.p,how:m.b.how});
   meals.push({id:'l',m:780,kind:'food',title:'Lunch',d:m.l.n+' · then 10 min walk',p:m.l.p,how:m.l.how});
-  meals.push({id:'s',m:1020,kind:'food',title:gymDay?'Pre-gym snack':'Snack',d:(gymDay?'1 banana + ':'')+m.s.n,p:m.s.p,how:m.s.how});
-  if(gymDay) meals.push({id:'sh',m:1185,kind:'food',title:'Post-gym shake',d:SHAKE.n,p:SHAKE.p,how:SHAKE.how});
+  const pre=dance?'Pre-dance snack':gymDay?'Pre-gym snack':'Snack';
+  meals.push({id:'s',m:1020,kind:'food',title:pre,d:(dance||gymDay?'1 banana + ':'')+m.s.n,p:m.s.p,how:m.s.how});
+  if(gymDay&&!amGym) meals.push({id:'sh',m:1185,kind:'food',title:'Post-gym shake',d:SHAKE.n,p:SHAKE.p,how:SHAKE.how});
   meals.push({id:'d',m:1200,kind:'food',title:'Dinner',d:m.d.n+' · then 10 min walk',p:m.d.p,how:m.d.how});
-  if(k==='wed') meals.push({id:'sh',m:1205,kind:'food',title:'Shake with dinner',d:SHAKE.n,p:SHAKE.p,how:'Dance days: have it with dinner.'});
 
   const morn=[m.b.morn,m.l.morn,m.d.morn].filter(Boolean);
-  if(morn.length) prep.push({id:'pm',m:465,kind:'prep',title:'Cook + pack lunch · 20 min',list:morn});
+  if(morn.length) prep.push({id:'pm',m:amGym?475:465,kind:'prep',title:'Cook + pack lunch · 20 min',list:morn});
   if(k==='sun') prep.push({id:'batch',m:1020,kind:'prep',title:'Sunday batch prep · 60–75 min',list:BATCH});
   const night=[tm.b.night,tm.l.night,tm.d.night].filter(Boolean);
   if(k==='sat') night.push('Soak 1 cup kala chana (for tomorrow’s batch prep).');
@@ -186,4 +187,4 @@ function plan(d){
 
 function setOVR(o){OVR=Object.assign({menu:{},study:{am:{},pm:{},how:{}},gym:{},log:[]},o||{});OVR.study=Object.assign({am:{},pm:{},how:{}},OVR.study);applyOVR();}
 const getOVR=()=>OVR;
-export {START,WARMUP_START,WEEKS,DAY,KEYS,NAME,SHORT,ist,keyOf,iso,addDays,weekOf,fmtT,fmtD,PHASES,phaseOf,WARM,GYM,exFor,STUDY,FOCUS,MENU,clone,DEF,applyOVR,setOVR,getOVR,SHAKE,BATCH,SHOP,plan};
+export {START,WARMUP_START,WEEKS,DAY,KEYS,NAME,SHORT,ist,keyOf,iso,addDays,weekOf,fmtT,fmtD,PHASES,phaseOf,WARM,GYM,exFor,STUDY,FOCUS,DANCE,MENU,clone,DEF,applyOVR,setOVR,getOVR,SHAKE,BATCH,SHOP,plan};
