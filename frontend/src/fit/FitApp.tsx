@@ -108,7 +108,7 @@ export default function FitApp() {
         const info = shorten(x.list ? x.list.join(" • ") : x.d);
         const line = pick(momentOf(x));
         items.push({ day: iso(d), item: x.id, kind: "start", minute: x.m, title: `${fmtT(x.m)} · ${x.title}`, body: line ? `${line}\n${info}` : info });
-        if (x.id !== "sleep" && x.id !== "kc") {
+        if (counts(x) && x.id !== "kc") {
           const roast = pick("late");
           items.push({ day: iso(d), item: x.id, kind: "late", minute: x.m + 30, title: `${x.title}: still waiting`, body: `${roast ? roast + " " : ""}Planned for ${fmtT(x.m)}, not ticked yet.` });
         }
@@ -246,7 +246,7 @@ function useLiveFavicon(now, ticks, ready) {
   if (ready && inRange) {
     const p = plan(today), n = now.min, done = ticks[iso(today)] || {};
     const cur = p.all.filter((x) => x.m <= n).pop();
-    const late = p.all.some((x) => x !== cur && x.m + 30 <= n && !isDoneItem(x, done) && x.id !== "sleep");
+    const late = p.all.some((x) => x !== cur && x.m + 30 <= n && !isDoneItem(x, done) && counts(x));
     if (late) led = LED.red;
     else if (cur && !isDoneItem(cur, done)) led = LED.amber;
     else led = LED.green;
@@ -278,7 +278,7 @@ function useLiveFavicon(now, ticks, ready) {
 /* ---------------- day score + streak ---------------- */
 function dayScore(d, done) {
   if (d < FIRST || d > LAST) return null;
-  const items = plan(d).all.filter((x) => x.id !== "sleep");
+  const items = plan(d).all.filter(counts);
   const got = items.filter((x) => isDoneItem(x, done || {})).length;
   return { got, total: items.length, pct: items.length ? got / items.length : 0 };
 }
@@ -437,7 +437,7 @@ function NowCard({ today, now, done, onGoNow, onShare }) {
   if (!nxt) nxt = { ...plan(addDays(today, 1)).all[0], tomorrow: true };
   const left = nxt.tomorrow ? 24 * 60 - n + nxt.m : nxt.m - n;
   const inTxt = left >= 60 ? `${Math.floor(left / 60)}h ${left % 60}m` : `${left} min`;
-  const missed = p.all.filter((x) => x !== cur && x.m + 30 <= n && !isDoneItem(x, done) && x.id !== "sleep");
+  const missed = p.all.filter((x) => x !== cur && x.m + 30 <= n && !isDoneItem(x, done) && counts(x));
   const s = scoresOf(today, done);
   const curDone = cur && isDoneItem(cur, done);
   const COL = { good: "var(--good)", mid: "var(--mid)", low: "var(--low)" };
@@ -512,14 +512,17 @@ function BottomNav({ tab, setTab }) {
 }
 
 /* ---------------- timeline row ---------------- */
+// Items that count toward the day: not lights-out, not optional bonus blocks.
+const counts = (x) => x.id !== "sleep" && !x.optional;
 function statusOf(x, list, sel, today, now, done) {
   if (isDoneItem(x, done)) return ["done", "DONE"];
   const ds = iso(sel), ts = iso(today);
+  if (x.optional && (ds < ts || (ds === ts && x.m + 30 <= now.min))) return ["later", "BONUS"];
   if (ds < ts) return ["late", "MISSED"];
   if (ds > ts) return ["later", "LATER"];
   const n = now.min;
   if (list.filter((y) => y.m <= n).pop() === x) return ["now", "NOW"];
-  if (x.m + 30 <= n && x.id !== "sleep") return ["late", "BEHIND"];
+  if (x.m + 30 <= n && counts(x)) return ["late", "BEHIND"];
   if (list.find((y) => y.m > n) === x) return ["next", "NEXT"];
   return ["later", "LATER"];
 }

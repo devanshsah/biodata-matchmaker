@@ -29,7 +29,7 @@ const VERDICT = [[0, "Day’s open."], [0.2, "In motion."], [0.5, "On track."], 
 
 export function storyStats({ today, now, done, streak, scans, kg, isDoneItem }) {
   const p = plan(today);
-  const items = p.all.filter((x) => x.id !== "sleep");
+  const items = p.all.filter((x) => x.id !== "sleep" && !x.optional);
   const got = items.filter((x) => isDoneItem(x, done)).length;
   const gymItem = p.train.find((x) => x.gym);
   let sets = 0, setsDone = 0, top = null;
