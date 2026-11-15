@@ -330,11 +330,11 @@ const verdictOf = (pct, seed) => pick(SASS.verdict.filter(([min]) => pct >= min)
 const sassNow = (x, seed) => pick(SASS.now[x.id] || SASS.now[x.kind === "food" ? "food" : x.kind === "prep" ? "prep" : "work"] || ["Next up."], seed + x.id);
 const DAY_TITLE = {
   mon: ["Leg day", "Big muscles, big burn."],
-  tue: ["Upper body A", "Lift at dawn, dance at dusk."],
-  wed: ["Walk day", "Long walk, easy evening."],
-  thu: ["Glutes + hamstrings", "Morning lift, evening dance."],
-  fri: ["Upper body B", "Undo the desk slouch."],
-  sat: ["Saturday sweat", "Study, noon workout, evening free."],
+  tue: ["Dance Tuesday", "Dance after work, study after dinner."],
+  wed: ["Upper body A", "Push, pull, posture."],
+  thu: ["Dance Thursday", "Move it, then lock in."],
+  fri: ["Glutes + hamstrings", "Strong hips, happy back."],
+  sat: ["Upper body B", "Noon lift, evening free."],
   sun: ["Free Sunday", "Reset, socialise, prep the week."],
 };
 
@@ -684,7 +684,7 @@ function Gym({ sel, today, done, toggle, clear, kg, setKg }) {
       <div className="dayhead">
         <div className="eyebrow">{NAME[p.k]} {fmtD(sel)}{isT ? " · today" : ""} · {g ? fmtT(p.train.find((x) => x.gym).m) : "6:30 pm"}{p.train.some((x) => x.id === "eve" && x.title.startsWith("Dance")) ? " · dance 6 pm" : ""}</div>
         <h2>{g ? title : "No gym session"}</h2>
-        <p className="tag">{g ? sub : p.k === "wed" ? "Long walk in the morning. Easy evening." : p.k === "sat" ? "Noon workout: the gym session you missed, full body, or a walk-jog." : "Recovery is training too. Walk, stretch, prep."}</p>
+        <p className="tag">{g ? sub : p.k === "tue" || p.k === "thu" ? "Dance class 6–7 pm. Next gym session tomorrow." : "Recovery is training too. Walk, stretch, prep."}</p>
         {g && <div className="chips"><span className="chip">warm-up first</span><span className="chip">same weight every set</span><span className="chip">stop 1–2 reps early</span></div>}
       </div>
       {g ? <GymBlock ex={g.gym} done={done} onTick={(id) => toggle(dk, id)} kg={kg} setKg={setKg} /> : <div className="note">Use the day strip above to peek at the next gym day.</div>}
@@ -983,7 +983,7 @@ function Edit({ sel, ver, saveOVR, vapid, memes, onMemes }) {
       })}
 
       {sec === "gym" && (!GYM[k] ? (
-        <div className="ecard"><h3>{NAME[k]}</h3><p style={{ margin: 0, color: "var(--muted)" }}>No gym session on {NAME[k]}. Gym days are Mon, Tue, Thu and Fri.</p></div>
+        <div className="ecard"><h3>{NAME[k]}</h3><p style={{ margin: 0, color: "var(--muted)" }}>No gym session on {NAME[k]}. Gym days are Mon, Wed, Fri (7:30 pm) and Sat (noon).</p></div>
       ) : (
         <form className="ecard" onSubmit={saveGym}>
           <h3>{GYM[k].title}</h3>
