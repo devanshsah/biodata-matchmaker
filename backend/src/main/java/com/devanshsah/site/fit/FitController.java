@@ -72,6 +72,7 @@ public class FitController {
         });
         out.put("kg", kg);
         out.put("scans", scans());
+        out.put("memes", MemeController.list(db));
         out.put("aiRead", reader.enabled());
         out.put("vapidPublicKey", push.publicKey());
         return out;

@@ -285,7 +285,7 @@
 .fit .btn.small { padding: 8px 12px; font-size: 13px; }
 .fit .saved { font-size: 13px; color: var(--done); font-weight: 600; }
 .fit .saved.err { color: var(--late); }
-.fit .ed-sw { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 14px; background: var(--panel); padding: 4px; border-radius: 12px; }
+.fit .ed-sw { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; margin-top: 14px; background: var(--panel); padding: 4px; border-radius: 12px; }
 .fit .ed-sw button { border: 0; background: transparent; color: var(--muted); border-radius: 9px; padding: 10px 6px; font: 600 14px var(--body); }
 .fit .ed-sw button[aria-pressed="true"] { background: var(--panel-2); color: var(--ink); }
 .fit .log { padding-left: 18px; }
@@ -360,3 +360,13 @@
 .fit .scan-msg { margin: 0; }
 .fit .scan-manual summary { cursor: pointer; font-size: 14px; color: var(--muted); padding: 4px 0; }
 .fit .scan-manual form { display: grid; gap: 12px; margin-top: 10px; }
+
+/* ---------- memes ---------- */
+.fit .meme-note { margin: 0; font-size: 13px; color: var(--muted); }
+.fit .meme-count { font: 600 12px var(--body); color: var(--muted); letter-spacing: .04em; margin-left: 6px; }
+.fit .meme-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.fit .meme-list li { border-top: 1px solid var(--line); padding-top: 10px; display: grid; gap: 8px; }
+.fit .meme-list li p { margin: 0; font-size: 15px; line-height: 1.4; color: var(--ink); }
+.fit .meme-list li.off p { color: var(--muted); text-decoration: line-through; }
+.fit .meme-edit { display: grid; gap: 10px; }
+.fit .btn.danger { color: var(--low); }

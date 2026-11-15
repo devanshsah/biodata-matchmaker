@@ -35,6 +35,8 @@ export default function FitApp() {
   const [kg, setKgState] = useState({});
   const [scans, setScans] = useState([]);
   const [aiRead, setAiRead] = useState(false);
+  const [memes, setMemes] = useState([]);
+  const memesRef = useRef([]);
   const [vapid, setVapid] = useState("");
   const [now, setNow] = useState(ist());
   const [sel, setSel] = useState(clampDay(ist().date));
@@ -89,14 +91,18 @@ export default function FitApp() {
 
   const syncReminders = useCallback(() => {
     const today = ist().date, items = [];
+    const pick = memePicker(memesRef.current);
     for (let i = 0; i < 14; i++) {
       const d = addDays(today, i);
       if (d < FIRST || d > LAST) continue;
       for (const x of plan(d).all) {
-        const body = shorten(x.list ? x.list.join(" • ") : x.d);
-        items.push({ day: iso(d), item: x.id, kind: "start", minute: x.m, title: `${fmtT(x.m)} · ${x.title}`, body });
-        if (x.id !== "sleep")
-          items.push({ day: iso(d), item: x.id, kind: "late", minute: x.m + 30, title: `${x.title}: still waiting`, body: `“By all means, move at a glacial pace. You know how that thrills me.” Planned for ${fmtT(x.m)}, not ticked yet.` });
+        const info = shorten(x.list ? x.list.join(" • ") : x.d);
+        const line = pick(momentOf(x));
+        items.push({ day: iso(d), item: x.id, kind: "start", minute: x.m, title: `${fmtT(x.m)} · ${x.title}`, body: line ? `${line}\n${info}` : info });
+        if (x.id !== "sleep") {
+          const roast = pick("late");
+          items.push({ day: iso(d), item: x.id, kind: "late", minute: x.m + 30, title: `${x.title}: still waiting`, body: `${roast ? roast + " " : ""}Planned for ${fmtT(x.m)}, not ticked yet.` });
+        }
       }
     }
     api("PUT", "/api/fit/reminders", { from: iso(today), items }).catch(() => {});
@@ -110,6 +116,8 @@ export default function FitApp() {
       setKgState(st.kg || {});
       setScans(st.scans || []);
       setAiRead(!!st.aiRead);
+      memesRef.current = st.memes || [];
+      setMemes(memesRef.current);
       setVapid(st.vapidPublicKey || "");
       setVer((v) => v + 1);
       setReady(true);
@@ -195,7 +203,7 @@ export default function FitApp() {
             <main hidden={tab !== "gym"}>{tab === "gym" && <Gym {...common} done={selDone} toggle={toggleTick} clear={clearTicks} kg={kg} setKg={setKg} />}</main>
             <main hidden={tab !== "meals"}>{tab === "meals" && <Meals {...common} done={selDone} toggle={toggleTick} />}</main>
             <main hidden={tab !== "prog"}>{tab === "prog" && <Progress scans={scans} aiRead={aiRead} reload={reloadScans} today={today} />}</main>
-            <main hidden={tab !== "edit"}>{tab === "edit" && <Edit sel={sel} ver={ver} saveOVR={saveOVR} vapid={vapid} />}</main>
+            <main hidden={tab !== "edit"}>{tab === "edit" && <Edit sel={sel} ver={ver} saveOVR={saveOVR} vapid={vapid} memes={memes} onMemes={(m) => { memesRef.current = m; setMemes(m); syncReminders(); }} />}</main>
           </>
         )}
       </div>
@@ -870,7 +878,7 @@ function b64u(s) {
   return Uint8Array.from([...b].map((c) => c.charCodeAt(0)));
 }
 
-function Edit({ sel, ver, saveOVR, vapid }) {
+function Edit({ sel, ver, saveOVR, vapid, memes, onMemes }) {
   const k = keyOf(sel);
   const [sec, setSec] = useState("meals");
   const [flash, setFlash] = useState({});
@@ -935,7 +943,7 @@ function Edit({ sel, ver, saveOVR, vapid }) {
         <p style={{ margin: 0, color: "var(--muted)", fontSize: 14 }}>Pick a day above, see what’s planned, change it, save. It updates the Day plan and Meals tabs right away, for every {NAME[k]} until Dec 26. Saved to your database, so it syncs across devices.</p>
       </div>
       <div className="ed-sw">
-        {[["meals", "Meals"], ["gym", "Workout"], ["study", "Upskill"]].map(([v, t]) => <button key={v} aria-pressed={sec === v} onClick={() => setSec(v)}>{t}</button>)}
+        {[["meals", "Meals"], ["gym", "Workout"], ["study", "Upskill"], ["memes", "Memes"]].map(([v, t]) => <button key={v} aria-pressed={sec === v} onClick={() => setSec(v)}>{t}</button>)}
       </div>
 
       {sec === "meals" && ["b", "l", "s", "d"].map((m) => {
@@ -999,6 +1007,8 @@ function Edit({ sel, ver, saveOVR, vapid }) {
         </form>
       )}
 
+      {sec === "memes" && <Memes memes={memes} onMemes={onMemes} />}
+
       <div className="sec">Phone reminders</div>
       <div className="ecard">
         <h3>Notifications</h3>
@@ -1010,6 +1020,103 @@ function Edit({ sel, ver, saveOVR, vapid }) {
       {log.length ? (
         <ul className="log">{log.map((x, i) => <li key={i}>{new Date(x.at).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })} · {x.what}</li>)}</ul>
       ) : <p style={{ color: "var(--muted)", fontSize: 14 }}>No changes yet. Everything is the original plan.</p>}
+    </>
+  );
+}
+
+/* ---------- meme lines for notifications ---------- */
+const MOMENTS = [["late", "Late / missed", "Task not ticked 30 min after it starts"], ["start", "Workout & tasks", "When a walk, gym or other task starts"],
+  ["wake", "Wake-up", "The wake-up alarm"], ["meal", "Meals & prep", "When a meal or meal prep starts"],
+  ["study", "Study", "When an upskilling block starts"], ["sleep", "Sleep", "The lights-out reminder"]];
+
+function momentOf(x) {
+  if (x.id === "wake") return "wake";
+  if (x.kind === "food" || x.kind === "prep") return "meal";
+  if (x.kind === "study") return "study";
+  if (x.kind === "rest") return "sleep";
+  return "start";
+}
+
+// Shuffled deck per moment, so a line doesn't repeat until the others have shown.
+function memePicker(list) {
+  const decks = {}, last = {};
+  return (moment) => {
+    const pool = list.filter((m) => m.active !== false && m.moment === moment).map((m) => m.text);
+    if (!pool.length) return "";
+    if (!decks[moment] || !decks[moment].length) {
+      const d = [...pool];
+      for (let i = d.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [d[i], d[j]] = [d[j], d[i]]; }
+      if (d.length > 1 && d[d.length - 1] === last[moment]) [d[0], d[d.length - 1]] = [d[d.length - 1], d[0]];
+      decks[moment] = d;
+    }
+    return (last[moment] = decks[moment].pop());
+  };
+}
+
+function Memes({ memes, onMemes }) {
+  const [msg, setMsg] = useState("");
+  const [editing, setEditing] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const reload = async () => onMemes(await api("GET", "/api/fit/memes"));
+  const run = async (fn, ok) => {
+    setBusy(true); setMsg("");
+    try { await fn(); await reload(); setMsg(ok); } catch (e) { setMsg(e.message || "Couldn’t save"); }
+    setBusy(false);
+  };
+  const add = (e) => {
+    e.preventDefault();
+    const f = e.currentTarget, fd = new FormData(f);
+    run(async () => { await api("POST", "/api/fit/memes", { text: String(fd.get("text") || ""), moment: fd.get("moment"), active: true }); f.reset(); }, "Added. It’s in the rotation from the next reminders.");
+  };
+  const save = (m, e) => {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    run(async () => { await api("PUT", `/api/fit/memes/${m.id}`, { text: String(fd.get("text") || ""), moment: fd.get("moment"), active: m.active }); setEditing(null); }, "Saved");
+  };
+  const toggle = (m) => run(() => api("PUT", `/api/fit/memes/${m.id}`, { ...m, active: !m.active }), m.active ? "Switched off" : "Back in the rotation");
+  const del = (m) => run(() => api("DELETE", `/api/fit/memes/${m.id}`), "Deleted");
+  const opts = MOMENTS.map(([v, t]) => <option key={v} value={v}>{t}</option>);
+
+  return (
+    <>
+      <form className="ecard" onSubmit={add}>
+        <h3>Add a meme</h3>
+        <p className="meme-note">Notifications pick a random line for the moment you choose. Late/missed lines go before “Planned for 6:30 pm, not ticked yet.”</p>
+        <div className="fld"><label htmlFor="meme-text">The line</label><textarea id="meme-text" name="text" required maxLength={300} placeholder="e.g. Picture abhi baaki hai mere dost. Tick it." /></div>
+        <div className="fld"><label htmlFor="meme-moment">When it shows</label><select id="meme-moment" name="moment" className="fit-sel" defaultValue="late">{opts}</select></div>
+        <div className="acts"><button className="btn" type="submit" disabled={busy}>Add meme</button><span className="saved" aria-live="polite">{msg}</span></div>
+      </form>
+
+      {MOMENTS.map(([v, t, hint]) => {
+        const list = memes.filter((m) => m.moment === v);
+        return (
+          <div className="ecard" key={v}>
+            <h3>{t} <small className="meme-count">{list.filter((m) => m.active).length} on</small></h3>
+            <p className="meme-note">{hint}</p>
+            {!list.length && <p className="meme-note">Nothing here yet, so these notifications just show the task.</p>}
+            <ul className="meme-list">
+              {list.map((m) => editing === m.id ? (
+                <li key={m.id}>
+                  <form onSubmit={(e) => save(m, e)} className="meme-edit">
+                    <div className="fld"><label htmlFor={`mt-${m.id}`}>The line</label><textarea id={`mt-${m.id}`} name="text" defaultValue={m.text} required maxLength={300} /></div>
+                    <div className="fld"><label htmlFor={`mm-${m.id}`}>When it shows</label><select id={`mm-${m.id}`} name="moment" className="fit-sel" defaultValue={m.moment}>{opts}</select></div>
+                    <div className="acts"><button className="btn small" type="submit" disabled={busy}>Save</button><button className="btn ghost small" type="button" onClick={() => setEditing(null)}>Cancel</button></div>
+                  </form>
+                </li>
+              ) : (
+                <li key={m.id} className={m.active ? "" : "off"}>
+                  <p>{m.text}</p>
+                  <div className="acts">
+                    <button className="btn ghost small" type="button" onClick={() => setEditing(m.id)}>Edit</button>
+                    <button className="btn ghost small" type="button" disabled={busy} onClick={() => toggle(m)}>{m.active ? "Switch off" : "Switch on"}</button>
+                    <button className="btn ghost small danger" type="button" disabled={busy} onClick={() => { if (window.confirm("Delete this meme?")) del(m); }}>Delete</button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      })}
     </>
   );
 }
