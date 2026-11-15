@@ -641,15 +641,15 @@ function WeekGrid({ sel, today }) {
   const mon = mondayOf(sel);
   const ds = KEYS.map((_, i) => addDays(mon, i)), ps = ds.map(plan);
   const Cell = ({ k, b, s }) => <td style={{ "--k": `var(--${k})` }}><b>{b}</b>{s && <span>{s}</span>}</td>;
+  // Every row tolerates a missing item (holidays, Sundays, garden days), so the grid never crashes.
+  const topic = (x) => (x ? x.title.replace(/^Upskill · [^·]+ · /, "") : "");
   const rows = [
-    ["6:30 am", (p) => { const x = p.train.find((t) => t.id === "walk"); return <Cell k="cardio" b={x.title} />; }],
-    ["8:10 am", (p) => { const x = p.train.find((t) => t.id === "st1"); return <Cell k="study" b="Upskill 2 h" s={x.title.split(" · ")[2]} />; }],
-    ["Workday", (p) => (p.train.find((t) => t.id === "work") ? <Cell k="routine" b="Hourly breaks" s="2 L water" /> : <Cell k="rest" b="Off" />)],
-    ["Training", (p) => { const g = p.train.find((t) => t.id === "gym"), e = p.train.find((t) => t.id === "eve"); if (!g && !e) return <Cell k="rest" b="Rest" s="Batch prep 5 pm" />; const b = [g && `${g.title.replace("Gym · ", "")}${g.m < 720 ? " (am)" : ""}`, e && "Dance (pm)"].filter(Boolean).join(" + "); return <Cell k={g ? g.kind : e.kind} b={b} s={g ? g.gym.filter((x) => !x.kind).map((x) => `${x.name} ${x.sr}`).join(" · ") : ""} />; }],
-    ["Evening", (p) => { const x = p.train.find((t) => t.id === "st2"); return <Cell k="study" b="Upskill 2 h" s={(p.k === "sat" || p.k === "sun" ? "3 pm · " : "8:30 pm · ") + x.title.split(" · ")[2]} />; }],
-    ["10:30 pm", () => <Cell k="routine" b="Core + stretch" />],
-  ];
-  return (
+    ["Morning", (p) => { const w = p.train.find((t) => t.id === "walk"), g = p.train.find((t) => t.id === "gym" && t.m < 720); const x = g || w; return x ? <Cell k={x.kind} b={x.title.replace("Gym · ", "").replace("Garden workout · ", "Garden · ")} s={fmtT(x.m)} /> : <Cell k="rest" b={p.vacay ? "Holiday" : "Easy"} />; }],
+    ["Workday", (p) => (p.train.find((t) => t.id === "work") ? <Cell k="routine" b="Work 10–7" s="Hourly breaks, 2 L water" /> : <Cell k="rest" b={p.vacay ? "Holiday" : "Off"} />)],
+    ["Training", (p) => { const g = p.train.find((t) => t.id === "gym"), e = p.train.find((t) => t.id === "eve"); if (!g && !e) return <Cell k="rest" b={p.vacay ? "Walk + explore" : "Rest"} s={p.k === "sun" ? "Batch prep" : ""} />; const b = [g && `${g.title.replace("Gym · ", "").replace("Garden workout · ", "Garden · ")} (${fmtT(g.m)})`, e && "Dance (6 pm)"].filter(Boolean).join(" + "); return <Cell k={g ? g.kind : e.kind} b={b} s={g && g.gym ? g.gym.filter((x) => !x.kind).map((x) => `${x.name} ${x.sr}`).join(" · ") : ""} />; }],
+    ["Study", (p) => { const xs = p.train.filter((t) => t.kind === "study" && !t.optional); return xs.length ? <Cell k="study" b={xs.map((x) => fmtT(x.m)).join(" + ")} s={xs.map(topic).join(" · ")} /> : <Cell k="rest" b="No study" />; }],
+    ["Night", (p) => <Cell k="routine" b={p.train.some((t) => t.id === "core") ? "Core + stretch" : "Wind down"} s="Chamomile, skin, lights out" />],
+  ];  return (
     <div className="grid-wrap">
       <table className="week">
         <thead><tr><th></th>{ds.map((d, i) => <th key={i} className={iso(d) === iso(today) ? "today" : ""}>{SHORT[KEYS[i]]} {d.getDate()}</th>)}</tr></thead>
