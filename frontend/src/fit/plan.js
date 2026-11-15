@@ -273,7 +273,7 @@ function plan(d){
   }
   if(k==='sun') train.push({id:'review',m:1172,kind:'routine',title:'Sunday review · 15 min',d:'Weekly weight average vs target, waist, wins, slips and what triggered them. Log career numbers on the Body tab. Pick 3 goals for next week.'});
   const once=ONCE[iso(d)]; if(once) train.push({...once,kind:'routine'});
-  train.push({id:'kc',m:T.kc,kind:'routine',title:'No munching after dinner',d:'Tick only if nothing after dinner except water, saunf or herbal tea. Craving? Water, then brush your teeth.'});
+  train.push({id:'kc',m:T.kc,kind:'routine',title:'Chamomile tea · kitchen closed',d:'Cup of chamomile, no sugar (1 tsp honey max). Helps you wind down. Tick only if nothing after dinner except water, saunf or this tea.'});
   if(T.core) train.push({id:'core',m:T.core[0],kind:'routine',title:'Core + stretch · '+T.core[1]+' min',d:T.core[1]<20?'Short version: bird dog, side plank, glute bridge, 2 stretches.':'Bird dog, side plank, curl-up, glute bridge, then stretches. Details below.'});
   const retinoid=['mon','wed','fri'].includes(k)&&w>=3;
   train.push({id:'skinpm',m:T.skinpm,kind:'routine',title:'Skin PM · 3 min',d:'Cleanser → moisturiser.'+(retinoid?' Retinoid night: pea-size amount (the one your dermatologist suggests) on dry skin before moisturiser. Skip if irritated.':'')});
