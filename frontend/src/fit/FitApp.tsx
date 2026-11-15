@@ -1035,6 +1035,13 @@ function Edit({ sel, ver, saveOVR, vapid, memes, onMemes }) {
 
       {sec === "memes" && <Memes memes={memes} onMemes={onMemes} />}
 
+      <div className="sec">Gym closure · 1 Dec – 30 Jan</div>
+      <div className="ecard">
+        <h3>Where you’ll train</h3>
+        <p style={{ margin: 0, fontSize: 14, color: "var(--muted)" }}>Your gym is shut for renovation. The plan keeps the normal gym schedule (for whichever gym you book). Going with garden workouts instead? Switch this on: Mon/Wed/Fri and Sat become a 60-min morning garden session (bodyweight + a band, walk-jog), and your weekday evenings free up for 2 h of study.</p>
+        <label className="toggle"><input type="checkbox" checked={!!getOVR().garden} onChange={async (e) => { getOVR().garden = e.target.checked; await saveOVR(e.target.checked ? "Dec–Jan: garden workouts on" : "Dec–Jan: back to gym schedule"); }} /> Use garden workouts while the gym is shut</label>
+      </div>
+
       <div className="sec">Phone reminders</div>
       <div className="ecard">
         <h3>Notifications</h3>
@@ -1225,7 +1232,7 @@ function Career({ today, saveOVR }) {
             </li>
           ))}
         </ul>
-        <p className="meme-note">Weekly targets: 10–12 problems · from 28 Dec, 8 applications + 3 referral asks · from 25 Jan, 2 mocks. Offer target: 27 Feb.</p>
+        <p className="meme-note">Weekly targets: 10–12 problems · from 5 Jan (after the holidays), 8 applications + 3 referral asks · from 25 Jan, 2 mocks. Offer target: 27 Feb.</p>
       </div>
     </>
   );

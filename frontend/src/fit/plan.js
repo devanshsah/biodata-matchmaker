@@ -211,12 +211,14 @@ function applyOVR(){
   Object.keys(GYM).forEach(k=>{const list=OVR.gym[k]||DEF.gym[k];GYM[k].ex=[WARM,...list.map(e=>({name:e.name,kind:e.kind||undefined,sets:e.kind?1:Math.max(1,+e.sets||1),sr:e.kind?e.reps:(Math.max(1,+e.sets||1)+' × '+e.reps),rest:e.rest,cue:e.cue}))]});
 }
 const SHAKE={n:'1 scoop The Whole Truth whey in water',p:24,how:'Within 30 min after the gym, in 250 ml water. Bloating after it? Try their isolate (less lactose).'};
-const SCANS=['2026-11-16','2026-12-11','2026-12-26','2027-01-22','2027-02-26','2027-03-10','2027-03-26','2027-05-14'];
+const SCANS=['2026-11-16','2026-11-27','2027-02-05','2027-02-26','2027-03-10','2027-03-26','2027-05-14'];
 const ONCE={
   '2026-11-21':{id:'blood',m:455,title:'Blood test (fasting)',d:'Before breakfast. CBC, ferritin, vitamin D, B12, TSH, HbA1c, lipid profile. Book a home collection.'},
   '2026-11-28':{id:'derm',m:660,title:'Dermatologist visit',d:'Hairline + skin. Ask about hair-loss treatment options and a retinoid. Take your blood report.'},
   '2026-12-06':{id:'resume',m:1080,title:'Resume v1 due',d:'Numbers from mPoint, full-stack + AI skills, link to Devansh’s Page case study.'},
-  '2026-12-28':{id:'apply',m:1288,title:'Applications open',d:'From today: 8 applications + 3 referral asks a week. Log them on the Body tab.'},
+  '2027-01-05':{id:'apply',m:1288,title:'Applications open',d:'From today: 8 applications + 3 referral asks a week. Log them on the Body tab.'},
+  '2026-12-11':{id:'tape',m:425,title:'Tape + photos check-in',d:'Waist at the belly button, weekly weight average, front/side photos in the same light. (Scan too if your gym for December has a scanner.)'},
+  '2027-01-04':{id:'tape2',m:425,title:'Back from holiday: tape + photos',d:'Weigh in, waist, photos. Straight back into the plan today, no “restart Monday”.'},
   '2026-12-31':{id:'goal1',m:422,title:'Checkpoint: −3 kg',d:'Weigh in this morning. Year one done.'},
   '2027-02-27':{id:'goal2',m:605,title:'Checkpoint: offer in hand',d:'Target date for a signed offer.'},
   '2027-03-10':{id:'goal3',m:422,title:'Checkpoint: −15 kg, beach body',d:'Morning weigh-in + evening scan. Photos.'},
@@ -232,15 +234,73 @@ const SEEDS={pumpkin:{n:'1 tbsp pumpkin seeds',p:3,how:'Raw or dry-roasted, on t
   alsi:{n:'1 tbsp ground alsi (flax)',p:2,how:'Always ground: whole flax passes straight through. Stir into curd, chilla batter or poha after cooking.'},
   chia:{n:'1 tbsp chia, soaked',p:2,how:'Never dry. Soak in 200 ml water or chaas for 20 min (or overnight in the fridge) until it gels.'}};
 const seedsFor=w=>{const x=Math.max(1,w);return {alsi:x>=2,chia:x>=3,pumpkin:true};};
+/* ---------- holidays + gym closure ---------- */
+const VACAY=[['2026-12-01','2026-12-06'],['2026-12-25','2027-01-03']];
+const GYM_CLOSED=['2026-12-01','2027-01-30'];
+const inRange=(d,[a,b])=>{const x=iso(d);return x>=a&&x<=b;};
+const isVacay=d=>VACAY.some(r=>inRange(d,r));
+// Your gym is shut 1 Dec – 30 Jan. Off by default (normal gym plan); turn on garden workouts in Tweak if you go that way.
+const gardenOn=d=>inRange(d,GYM_CLOSED)&&OVR.garden===true;
+const GWARM={kind:'routine',name:'Warm-up',sr:'5 min',sets:1,cue:'March or brisk walk 2 min → bird dog 6/side → glute bridge ×10 → cat-camel ×6.'};
+const GARDEN={
+  A:{title:'Lower body',ex:[GWARM,
+    {name:'Box squat to a bench',sr:'3 × 12–15',sets:3,rest:'60 s',cue:'Sit back until you touch the bench, chest tall, stand up through the heels.'},
+    {name:'Bench hip thrust',sr:'3 × 12–15',sets:3,rest:'60 s',cue:'Upper back on the bench, chin tucked, squeeze 2 s at the top. Don’t arch.'},
+    {name:'Reverse lunge holding a rail',sr:'3 × 10 / leg',sets:3,rest:'60 s',cue:'Step back, back knee down gently, torso upright.'},
+    {name:'Low step-ups on a bench',sr:'3 × 10 / leg',sets:3,rest:'60 s',cue:'Knee height or lower. Push through the front heel.'},
+    {name:'Wall sit',sr:'3 × 40 s',sets:3,rest:'45 s',cue:'Back flat on a wall or tree, thighs no lower than parallel.'},
+    {name:'Side plank',sr:'2 × 30 s / side',sets:2,rest:'30 s',cue:'Straight line head to heels. Knees down is fine.'},
+    {kind:'cardio',name:'Walk-jog',sr:'20 min',sets:1,cue:'2 min walk / 1 min easy jog. Leg pain or tingling: walk only.'}]},
+  B:{title:'Upper + core',ex:[GWARM,
+    {name:'Incline push-ups on a bench',sr:'3 × 10–15',sets:3,rest:'60 s',cue:'Body straight, chest to the bench edge. Lower the incline as you get stronger.'},
+    {name:'Band row',sr:'3 × 12–15',sets:3,rest:'60 s',cue:'Band round a pole, pull elbows back, squeeze shoulder blades. (A ₹400–500 band set does it.)'},
+    {name:'Band pull-apart',sr:'3 × 15',sets:3,rest:'45 s',cue:'Arms straight, pull the band to your chest. Posture fixer.'},
+    {name:'Shallow bench dips',sr:'2 × 10',sets:2,rest:'60 s',cue:'Only down to 90° at the elbow. Stop if shoulders pinch.'},
+    {name:'Bird dog',sr:'3 × 8 / side',sets:3,rest:'30 s',cue:'Slow, hips level, pause 2 s at full reach.'},
+    {name:'Dead bug',sr:'3 × 8 / side',sets:3,rest:'30 s',cue:'Low back pressed to the mat the whole time.'},
+    {kind:'cardio',name:'Walk-jog intervals',sr:'20 min',sets:1,cue:'1 min brisk jog / 2 min walk. Walk only if your back or leg complains.'}]}
+};
+const GARDEN_DAY={mon:'A',wed:'B',fri:'A',sat:'B'};
+function exGarden(k,ph){
+  return GARDEN[GARDEN_DAY[k]].ex.map((e,i)=>{
+    if(e.kind) return {...e};
+    let sets=e.sets; const tail=e.sr.split('×')[1];
+    if((ph.scheme==='volume'||ph.scheme==='strength')&&(i===1||i===2)) sets=e.sets+1;
+    if(ph.scheme==='deload') sets=Math.min(2,e.sets);
+    return {...e,sets,sr:sets+' ×'+tail};
+  });
+}
+// Holiday: walk, eat sensibly, sleep. No study, no prep, no pressure.
+function vacayDay(d,k,w,ph){
+  const train=[
+    {id:'wake',m:480,kind:'routine',title:'Holiday morning',d:'Water first. Sleep in a bit, it’s a holiday.'},
+    {id:'walk',m:510,kind:'cardio',title:'Walk / explore · 45–60 min',d:'Explore on foot. Aim for 10k steps a day on holiday, that alone keeps you on track.'},
+    {id:'bw',m:570,kind:'routine',optional:true,title:'Bodyweight · 15 min (optional)',d:'Squats ×15, push-ups ×10, glute bridges ×15, bird dog ×8/side. 2 rounds. Skip without guilt.'},
+    {id:'skinam',m:585,kind:'routine',title:'Skin AM · SPF 50',d:'Cleanser → moisturiser → SPF 50. Reapply SPF if you’re out in the sun.'},
+    {id:'kc',m:1335,kind:'routine',title:'Chamomile tea · kitchen closed',d:'Chamomile (carry tea bags). Nothing after dinner except water or this tea.'},
+    {id:'skinpm',m:1365,kind:'routine',title:'Skin PM · 2 min',d:'Cleanser → moisturiser.'},
+    {id:'sleep',m:1410,kind:'rest',title:'Lights out',d:'Still aim for 7+ hours.'}];
+  const once=ONCE[iso(d)]; if(once) train.push({...once,kind:'routine'});
+  const meals=[
+    {id:'b',m:540,kind:'food',title:'Breakfast',d:'Protein first: paneer paratha with curd, poha + curd, idli + sambar, or upma + chaas',p:15},
+    {id:'l',m:810,kind:'food',title:'Lunch',d:'Thali-style: dal, sabzi, 2 roti or a small rice, curd. Skip the fried sides.',p:18},
+    {id:'s',m:1020,kind:'food',title:'Snack',d:'Fruit, chaas, roasted chana or pumpkin seeds. Not chips.',p:6},
+    {id:'d',m:1230,kind:'food',title:'Dinner',d:'Paneer or dal dish + 1 roti or small rice. One treat a day is fine: enjoy it, then stop.',p:20}];
+  return {k,w,ph,vacay:true,train,meals,prep:[],protein:meals.reduce((a,x)=>a+x.p,0),all:[...train,...meals].sort((a,b)=>a.m-b.m)};
+}
 function plan(d){
-  const k=keyOf(d), w=Math.min(weekOf(d),WEEKS), ph=phaseOf(w), gymDay=!!GYM[k];
+  const k=keyOf(d), w=Math.min(weekOf(d),WEEKS), ph=phaseOf(w);
+  if(isVacay(d)) return vacayDay(d,k,w,ph);
+  const gymDay=!!GYM[k], garden=gymDay&&gardenOn(d);
   const m=MENU[k], tm=MENU[keyOf(addDays(d,1))], train=[], meals=[], prep=[];
   const weigh=['mon','wed','fri','sun'].includes(k), dance=DANCE.includes(k), amGym=gymDay&&AM_GYM.includes(k);
-  const workday=!['sat','sun'].includes(k), eveGym=gymDay&&workday;
+  const workday=!['sat','sun'].includes(k), eveGym=gymDay&&workday&&!garden;
   // Times per kind of day. Work is 10 am – 7 pm, Mon–Fri. Sunday is off.
   // 7–9 am: wake up, chores, walk/run, coffee. Gym Mon/Wed/Fri 7:30 pm + Sat noon, dance Tue/Thu 6–7 pm.
   // The gym is 30 min away each way.
-  const T=k==='sat'?{wake:450,coffee:510,skin:540,b:555,st1:[600,690],go:690,gym:720,back:790,l:825,st2:[885,1065],s:1070,bonus:[1090,1270],d:1275,pn:1295,kc:1345,core:[1350,20],skinpm:1372,sleep:1395}
+  const T=garden&&k==='sat'?{wake:450,gym:465,coffee:530,skin:555,b:570,st1:[600,720],l:780,st2:[870,1050],s:1055,bonus:[1090,1270],d:1275,pn:1295,kc:1345,core:[1350,10],skinpm:1372,sleep:1395}
+    :garden?{wake:420,gym:435,coffee:500,skin:540,b:555,pm:565,s:1020,d:1170,pn:1190,st2:[1215,1335],kc:1337,core:[1340,10],skinpm:1362,sleep:1380}
+    :k==='sat'?{wake:450,coffee:510,skin:540,b:555,st1:[600,690],go:690,gym:720,back:790,l:825,st2:[885,1065],s:1070,bonus:[1090,1270],d:1275,pn:1295,kc:1345,core:[1350,20],skinpm:1372,sleep:1395}
     :eveGym?{wake:420,am:440,coffee:500,skin:540,b:555,pm:565,s:1080,go:1140,gym:1170,back:1240,sh:1245,d:1275,pn:1295,st2:[1305,1365],kc:1366,core:[1369,10],skinpm:1381,sleep:1390}
     :dance?{wake:420,am:440,coffee:500,skin:540,b:555,pm:565,s:1005,eve:1080,d:1170,pn:1190,st2:[1215,1335],kc:1337,core:[1340,20],skinpm:1362,sleep:1380}
     :{wake:450,skin:465,b:495,bonus:[600,780],l:810,batch:885,s:960,st2:[990,1170],d:1200,pn:1220,kc:1345,skinpm:1360,sleep:1380};
@@ -260,7 +320,8 @@ function plan(d){
   if(T.bonus){const r=T.bonus; train.push({id:'bonus',m:r[0],kind:'study',optional:true,title:'Bonus study · 3 h (only if no plans)',d:fmtT(r[0])+'–'+fmtT(r[1])+'. Got plans? Skip it, no guilt, it doesn’t count against the day. Free? Use it for the week’s weakest topic or the portfolio project.'});}
   const scan=SCANS.includes(iso(d));
   if(scan) train.push({id:'scan',m:k==='sat'?700:1155,kind:'routine',title:'Body scan at the gym',d:'Before training. No big meal in the 2 hours before.'});
-  if(gymDay) train.push({id:'gym',m:T.gym,kind:'lift',title:'Gym · '+GYM[k].title,d:fmtT(T.gym)+'–'+fmtT(T.gym+70)+(workday?'. Log off at 7, leave straight away.':'. Evening free after this.')+' Tap a box after each set.',gym:exFor(k,ph)});
+  if(garden) train.push({id:'gym',m:T.gym,kind:'lift',title:'Garden workout · '+GARDEN[GARDEN_DAY[k]].title,d:fmtT(T.gym)+'–'+fmtT(T.gym+60)+'. Warm-up, the circuit, then walk-jog. Tap a box after each set.',gym:exGarden(k,ph)});
+  else if(gymDay) train.push({id:'gym',m:T.gym,kind:'lift',title:'Gym · '+GYM[k].title,d:fmtT(T.gym)+'–'+fmtT(T.gym+70)+(workday?'. Log off at 7, leave straight away.':'. Evening free after this.')+' Tap a box after each set.',gym:exFor(k,ph)});
   if(dance) train.push({id:'eve',m:T.eve,kind:'cardio',title:'Dance class · 6–7 pm',d:'Hydrate. Go easy on jumps and deep twists (back first). Missed class? 45 min brisk walk instead.'});
   if(T.st2){
     // Weekdays have one evening block: first half DSA/main topic, second half the evening topic.
@@ -282,8 +343,8 @@ function plan(d){
   const sd=seedsFor(w), add=(meal,seed)=>({...meal,d:meal.d+' + '+SEEDS[seed].n,p:meal.p+SEEDS[seed].p,how:(meal.how||'')+' '+SEEDS[seed].how});
   const _mp=meals.push.bind(meals);
   meals.push=(x)=>_mp(x.id==='b'&&sd.alsi?add(x,'alsi'):x.id==='s'?add(sd.chia?add(x,'chia'):x,'pumpkin'):x);
-  meals.push(amGym?{id:'b',m:T.b,kind:'food',title:'Breakfast + post-gym shake',d:m.b.n+' + '+SHAKE.n,p:m.b.p+SHAKE.p,how:m.b.how+' Shake within 30 min of the gym.'}:{id:'b',m:T.b,kind:'food',title:'Breakfast',d:m.b.n,p:m.b.p,how:m.b.how});
-  meals.push(k==='sat'?{id:'l',m:T.l,kind:'food',title:'Lunch + post-gym shake',d:m.l.n+' + '+SHAKE.n,p:m.l.p+SHAKE.p,how:m.l.how}:{id:'l',m:T.l||780,kind:'food',title:'Lunch',d:m.l.n+' · saunf + 10 min walk after',p:m.l.p,how:m.l.how});
+  meals.push(amGym||garden?{id:'b',m:T.b,kind:'food',title:'Breakfast + post-workout shake',d:m.b.n+' + '+SHAKE.n,p:m.b.p+SHAKE.p,how:m.b.how+' Shake within 30 min of the gym.'}:{id:'b',m:T.b,kind:'food',title:'Breakfast',d:m.b.n,p:m.b.p,how:m.b.how});
+  meals.push(k==='sat'&&!garden?{id:'l',m:T.l,kind:'food',title:'Lunch + post-gym shake',d:m.l.n+' + '+SHAKE.n,p:m.l.p+SHAKE.p,how:m.l.how}:{id:'l',m:T.l||780,kind:'food',title:'Lunch',d:m.l.n+' · saunf + 10 min walk after',p:m.l.p,how:m.l.how});
   const pre=dance?'Pre-dance snack':eveGym?'Pre-gym snack':'Snack';
   meals.push({id:'s',m:T.s,kind:'food',title:pre,d:(dance||eveGym?'1 banana + ':'')+m.s.n,p:m.s.p,how:m.s.how});
   if(eveGym) meals.push({id:'sh',m:T.sh,kind:'food',title:'Post-gym shake',d:SHAKE.n,p:SHAKE.p,how:SHAKE.how});
@@ -308,4 +369,4 @@ function setOVR(o){OVR=Object.assign({menu:{},study:{am:{},pm:{},how:{}},gym:{},
   if(!OVR.study.v2){OVR.study.am={};OVR.study.pm={};OVR.study.v2=true;} // topics from the old 6-week plan give way to the phased curriculum
   applyOVR();}
 const getOVR=()=>OVR;
-export {SEEDS,seedsFor,GOALS,SCANS,CAREER,careerOf,studyFor,HOW,START,WARMUP_START,WEEKS,DAY,KEYS,NAME,SHORT,ist,keyOf,iso,addDays,weekOf,fmtT,fmtD,PHASES,phaseOf,WARM,GYM,exFor,STUDY,FOCUS,DANCE,MENU,clone,DEF,applyOVR,setOVR,getOVR,SHAKE,BATCH,SHOP,plan};
+export {VACAY,GYM_CLOSED,isVacay,gardenOn,SEEDS,seedsFor,GOALS,SCANS,CAREER,careerOf,studyFor,HOW,START,WARMUP_START,WEEKS,DAY,KEYS,NAME,SHORT,ist,keyOf,iso,addDays,weekOf,fmtT,fmtD,PHASES,phaseOf,WARM,GYM,exFor,STUDY,FOCUS,DANCE,MENU,clone,DEF,applyOVR,setOVR,getOVR,SHAKE,BATCH,SHOP,plan};

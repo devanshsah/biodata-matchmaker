@@ -388,3 +388,5 @@
 .fit .wm-day h4 small { font: 600 12px var(--body); color: var(--fuel); letter-spacing: 0; text-transform: none; }
 .fit .wm-day ul { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 4px; font-size: 14px; line-height: 1.4; }
 .fit .wm-day b { color: var(--muted); font-weight: 600; margin-right: 4px; }
+.fit .toggle { display: flex; align-items: center; gap: 10px; font-size: 15px; min-height: 44px; cursor: pointer; }
+.fit .toggle input { width: 22px; height: 22px; accent-color: var(--good); }
