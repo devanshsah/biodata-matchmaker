@@ -8,7 +8,7 @@ import * as P from "./plan.js";
 import "./fit.css";
 import StoryShare, { storyStats } from "./StoryShare";
 
-const { plan, setOVR, getOVR, applyOVR, ist, iso, addDays, keyOf, fmtT, fmtD, START, WARMUP_START, WEEKS, KEYS, NAME, SHORT, GYM, WARM, STUDY, MENU, DEF, clone, weekOf, phaseOf, SHOP, GOALS, SCANS, studyFor, careerOf } = P;
+const { plan, setOVR, getOVR, applyOVR, ist, iso, addDays, keyOf, fmtT, fmtD, START, WARMUP_START, WEEKS, KEYS, NAME, SHORT, GYM, WARM, STUDY, MENU, DEF, clone, weekOf, phaseOf, SHOP, SEEDS, seedsFor, GOALS, SCANS, studyFor, careerOf } = P;
 
 const FIRST = WARMUP_START;
 const mondayOf = (d) => addDays(d, -((d.getDay() + 6) % 7));
@@ -714,6 +714,7 @@ function Meals({ sel, today, now, done, toggle }) {
       <ol className="timeline">{p.meals.map((x) => <Slot key={x.id} x={x} list={p.meals} sel={sel} today={today} now={now} done={done} onTick={onTick} />)}</ol>
       <div className="sec">Prep</div>
       <ol className="timeline">{p.prep.map((x) => <Slot key={x.id} x={x} list={p.prep} sel={sel} today={today} now={now} done={done} onTick={onTick} />)}</ol>
+      <WeekMenu sel={sel} />
       <details className="box"><summary>Tomorrow’s menu</summary><div className="in"><ul>{t.meals.map((x) => <li key={x.id}><b>{fmtT(x.m)}</b> · {x.d.split(" · ")[0]}</li>)}</ul></div></details>
       <details className="box"><summary>Weekly shopping list</summary><div className="in"><ul>{SHOP.map((s) => <li key={s}>{s}</li>)}</ul></div></details>
       <details className="box"><summary>Food rules</summary><div className="in"><ul>
@@ -1227,5 +1228,26 @@ function Career({ today, saveOVR }) {
         <p className="meme-note">Weekly targets: 10–12 problems · from 28 Dec, 8 applications + 3 referral asks · from 25 Jan, 2 mocks. Offer target: 27 Feb.</p>
       </div>
     </>
+  );
+}
+
+/* ---------- the whole week's food at a glance ---------- */
+function WeekMenu({ sel }) {
+  const mon = mondayOf(sel);
+  const days = Array.from({ length: 7 }, (_, i) => plan(addDays(mon, i)));
+  const sd = seedsFor(weekOf(mon));
+  return (
+    <details className="box" open>
+      <summary>This week’s menu · {fmtD(mon)} – {fmtD(addDays(mon, 6))}</summary>
+      <div className="in">
+        <p className="wm-note">Seeds this week: {["pumpkin", "alsi", "chia"].filter((k) => sd[k]).map((k) => SEEDS[k].n).join(" · ")}{!sd.chia ? ` (${!sd.alsi ? "alsi joins next week, chia the week after" : "chia joins next week"}, so your gut adjusts)` : ""}.</p>
+        {days.map((p, i) => (
+          <div className="wm-day" key={i}>
+            <h4>{NAME[p.k]} <small>{p.protein} g protein</small></h4>
+            <ul>{p.meals.map((m) => <li key={m.id + m.m}><b>{fmtT(m.m)}</b> {m.title}: {m.d.replace(" · saunf + 10 min walk after", "")}</li>)}</ul>
+          </div>
+        ))}
+      </div>
+    </details>
   );
 }

@@ -380,3 +380,11 @@
 .fit .career .step { display: flex; align-items: center; gap: 10px; }
 .fit .career .step b { min-width: 28px; text-align: center; font-family: var(--display); font-size: 24px; }
 .fit .career .step .btn { min-width: 44px; min-height: 44px; padding: 0; font-size: 20px; }
+
+/* ---------- week menu ---------- */
+.fit .wm-note { margin: 0 0 10px; font-size: 13px; color: var(--muted); }
+.fit .wm-day { border-top: 1px solid var(--line); padding: 10px 0; }
+.fit .wm-day h4 { margin: 0 0 6px; font-family: var(--display); font-size: 18px; letter-spacing: .04em; text-transform: uppercase; display: flex; justify-content: space-between; align-items: baseline; }
+.fit .wm-day h4 small { font: 600 12px var(--body); color: var(--fuel); letter-spacing: 0; text-transform: none; }
+.fit .wm-day ul { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 4px; font-size: 14px; line-height: 1.4; }
+.fit .wm-day b { color: var(--muted); font-weight: 600; margin-right: 4px; }

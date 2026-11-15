@@ -178,7 +178,7 @@ const MENU={
     b:{n:'Jain poha with peanuts + bowl of curd',p:11,how:'Rinse poha. Temper mustard seeds, curry leaves, peanuts, turmeric, chilli. Lemon on top.'},
     l:{n:'2 roti + Jain chana masala + curd + salad',p:18,how:'Tomato-based masala, no onion or garlic.',night:'Soak ½ cup kabuli chana (tomorrow’s lunch).',morn:'Pressure-cook soaked chana (5–6 whistles), make masala and 2 roti, pack.'},
     s:{n:'Chaas with jeera + 1 fruit',p:6,how:'1 glass buttermilk, roasted jeera, black salt.'},
-    d:{n:'Thick dal + 1 roti + sabzi + raita',p:17,how:'¼ cup toor or moong dal, any Jain sabzi (bhindi, beans, capsicum).'}},
+    d:{n:'Thick dal + 1 roti + sabzi + raita + 75 g paneer cubes',p:31,how:'¼ cup toor or moong dal, any Jain sabzi (bhindi, beans, capsicum). Paneer pan-seared with chaat masala.'}},
   thu:{
     b:{n:'2 besan chilla + bowl of curd',p:18,how:'Same as Monday. Stuff with 30 g grated paneer for +5 g protein.'},
     l:{n:'2 moong dal chilla + hung curd dip + sabzi',p:18,how:'Grind soaked dal, make chillas, quick sabzi.',night:'Soak ½ cup yellow moong dal + hang 250 g curd in a muslin cloth (tomorrow’s lunch).',morn:'Grind dal, make 2 chillas + quick sabzi, pack with the hung curd dip.'},
@@ -190,7 +190,7 @@ const MENU={
     s:{n:'Roasted makhana + chaas',p:6,how:'1 cup makhana dry-roasted with a pinch of salt and pepper.'},
     d:{n:'Whole-wheat veg pasta in hung-curd sauce',p:18,how:'60 g dry pasta + capsicum, tomato, beans. Sauce: hung curd + chilli flakes + oregano, off the heat.',night:'Hang 250 g curd (tomorrow’s pasta sauce).'}},
   sat:{
-    b:{n:'Moong dal chilla + curd + 1 scoop whey shake',p:42,how:'Weekend: the shake goes with breakfast.',night:'Soak ½ cup yellow moong dal (tomorrow’s breakfast).'},
+    b:{n:'Moong dal chilla + curd + 10 almonds',p:18,how:'Grind soaked dal with green chilli, jeera, salt. Shake comes after the gym today.',night:'Soak ½ cup yellow moong dal (tomorrow’s breakfast).'},
     l:{n:'Moong dal khichdi + curd + salad',p:16,how:'½ cup rice + ¼ cup moong dal, 3 whistles, ghee tadka (1 tsp).'},
     s:{n:'Fruit + bowl of curd',p:7,how:'Any seasonal fruit.'},
     d:{n:'Besan chilla + sabzi + raita',p:18,how:'Same as Monday’s chilla.'}},
@@ -222,11 +222,16 @@ const ONCE={
   '2027-03-10':{id:'goal3',m:422,title:'Checkpoint: −15 kg, beach body',d:'Morning weigh-in + evening scan. Photos.'},
   '2027-03-27':{id:'bday',m:600,title:'Birthday 🎂',d:'Photos, celebrate, then set the next goal.'}
 };
-const BATCH=['Pressure-cook 1½ cups toor or moong dal → fridge (Mon lunch + extra)','Boil the soaked kala chana (5 whistles) with hing → fridge (chaat as a lunch side Mon–Tue)','Wash and chop lauki, beans, capsicum, tomato, cucumber into boxes','Make green chutney: coriander + green chilli + lemon + salt','Restock: besan, moong dal, roasted chana, makhana, paneer, milk, fruit'];
+const BATCH=['Alsi for the week: dry-roast 7 tbsp for 2 min, cool, grind coarse → airtight jar in the fridge (keeps ~1 week)','Pressure-cook 1½ cups toor or moong dal → fridge (Mon lunch + extra)','Boil the soaked kala chana (5 whistles) with hing → fridge (chaat as a lunch side Mon–Tue)','Wash and chop lauki, beans, capsicum, tomato, cucumber into boxes','Make green chutney: coriander + green chilli + lemon + salt','Restock: besan, moong dal, roasted chana, makhana, paneer, milk, fruit'];
 const SHOP=['Besan 1 kg (lasts ~2 weeks)','Yellow moong dal 1 kg','Whole green moong 500 g','Kabuli chana + kala chana + rajma 500 g each','Roasted chana 500 g, makhana 200 g','Milk 1 L/day (for curd)','Paneer 250–300 g/week','Seasonal veg: lauki, beans, capsicum, bhindi, tomato, cucumber','Fruit: bananas (7–9), apples or papaya','Whole-wheat pasta 500 g','Whey: 1 kg lasts ~1 month'];
 
 
 /* ---------- build a day ---------- */
+/* ---------- seeds: one new seed a week so the gut can adjust (they're fibre-heavy) ---------- */
+const SEEDS={pumpkin:{n:'1 tbsp pumpkin seeds',p:3,how:'Raw or dry-roasted, on top or on the side. Zinc + magnesium: good for hair, skin and sleep.'},
+  alsi:{n:'1 tbsp ground alsi (flax)',p:2,how:'Always ground: whole flax passes straight through. Stir into curd, chilla batter or poha after cooking.'},
+  chia:{n:'1 tbsp chia, soaked',p:2,how:'Never dry. Soak in 200 ml water or chaas for 20 min (or overnight in the fridge) until it gels.'}};
+const seedsFor=w=>{const x=Math.max(1,w);return {alsi:x>=2,chia:x>=3,pumpkin:true};};
 function plan(d){
   const k=keyOf(d), w=Math.min(weekOf(d),WEEKS), ph=phaseOf(w), gymDay=!!GYM[k];
   const m=MENU[k], tm=MENU[keyOf(addDays(d,1))], train=[], meals=[], prep=[];
@@ -274,11 +279,15 @@ function plan(d){
   train.push({id:'skinpm',m:T.skinpm,kind:'routine',title:'Skin PM · 3 min',d:'Cleanser → moisturiser.'+(retinoid?' Retinoid night: pea-size amount (the one your dermatologist suggests) on dry skin before moisturiser. Skip if irritated.':'')});
   train.push({id:'sleep',m:T.sleep,kind:'rest',title:'Lights out',d:'Phone charges outside the bedroom. Cool room, 22–24 °C. About '+sleepFor+' h until tomorrow’s alarm.'});
 
+  const sd=seedsFor(w), add=(meal,seed)=>({...meal,d:meal.d+' + '+SEEDS[seed].n,p:meal.p+SEEDS[seed].p,how:(meal.how||'')+' '+SEEDS[seed].how});
+  const _mp=meals.push.bind(meals);
+  meals.push=(x)=>_mp(x.id==='b'&&sd.alsi?add(x,'alsi'):x.id==='s'?add(sd.chia?add(x,'chia'):x,'pumpkin'):x);
   meals.push(amGym?{id:'b',m:T.b,kind:'food',title:'Breakfast + post-gym shake',d:m.b.n+' + '+SHAKE.n,p:m.b.p+SHAKE.p,how:m.b.how+' Shake within 30 min of the gym.'}:{id:'b',m:T.b,kind:'food',title:'Breakfast',d:m.b.n,p:m.b.p,how:m.b.how});
   meals.push(k==='sat'?{id:'l',m:T.l,kind:'food',title:'Lunch + post-gym shake',d:m.l.n+' + '+SHAKE.n,p:m.l.p+SHAKE.p,how:m.l.how}:{id:'l',m:T.l||780,kind:'food',title:'Lunch',d:m.l.n+' · saunf + 10 min walk after',p:m.l.p,how:m.l.how});
   const pre=dance?'Pre-dance snack':eveGym?'Pre-gym snack':'Snack';
   meals.push({id:'s',m:T.s,kind:'food',title:pre,d:(dance||eveGym?'1 banana + ':'')+m.s.n,p:m.s.p,how:m.s.how});
   if(eveGym) meals.push({id:'sh',m:T.sh,kind:'food',title:'Post-gym shake',d:SHAKE.n,p:SHAKE.p,how:SHAKE.how});
+  if(dance) meals.push({id:'sh',m:T.d+5,kind:'food',title:'Shake with dinner',d:SHAKE.n,p:SHAKE.p,how:'Dance days: have it with dinner.'});
   meals.push({id:'d',m:T.d,kind:'food',title:'Dinner',d:m.d.n+' · saunf + 10 min walk after',p:m.d.p,how:m.d.how});
 
   const morn=[m.b.morn,m.l.morn,m.d.morn].filter(Boolean);
@@ -287,6 +296,7 @@ function plan(d){
   const night=[tm.b.night,tm.l.night,tm.d.night].filter(Boolean);
   if(k==='sat') night.push('Soak 1 cup kala chana (for tomorrow’s batch prep).');
   night.push('Set curd: warm 500 ml milk to lukewarm, stir in 1 tsp curd, cover. Ready by morning.');
+  if(seedsFor(weekOf(addDays(d,1))).chia) night.push('Chia for tomorrow’s snack: 1 tbsp in 200 ml water, fridge.');
   prep.push({id:'pn',m:T.pn,kind:'prep',title:'Night prep for tomorrow · 10 min',list:night});
 
   const protein=meals.reduce((a,x)=>a+(x.p||0),0);
@@ -298,4 +308,4 @@ function setOVR(o){OVR=Object.assign({menu:{},study:{am:{},pm:{},how:{}},gym:{},
   if(!OVR.study.v2){OVR.study.am={};OVR.study.pm={};OVR.study.v2=true;} // topics from the old 6-week plan give way to the phased curriculum
   applyOVR();}
 const getOVR=()=>OVR;
-export {GOALS,SCANS,CAREER,careerOf,studyFor,HOW,START,WARMUP_START,WEEKS,DAY,KEYS,NAME,SHORT,ist,keyOf,iso,addDays,weekOf,fmtT,fmtD,PHASES,phaseOf,WARM,GYM,exFor,STUDY,FOCUS,DANCE,MENU,clone,DEF,applyOVR,setOVR,getOVR,SHAKE,BATCH,SHOP,plan};
+export {SEEDS,seedsFor,GOALS,SCANS,CAREER,careerOf,studyFor,HOW,START,WARMUP_START,WEEKS,DAY,KEYS,NAME,SHORT,ist,keyOf,iso,addDays,weekOf,fmtT,fmtD,PHASES,phaseOf,WARM,GYM,exFor,STUDY,FOCUS,DANCE,MENU,clone,DEF,applyOVR,setOVR,getOVR,SHAKE,BATCH,SHOP,plan};
