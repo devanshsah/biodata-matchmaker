@@ -33,8 +33,6 @@ services:
       DATABASE_PASSWORD: ${DB_PASSWORD}
       SESSION_SECRET: ${SESSION_SECRET:-}
       VAPID_SUBJECT: ${VAPID_SUBJECT:-mailto:you@example.com}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-sonnet-5-5}
     ports:
       - "${PORT:-8080}:8080"
 

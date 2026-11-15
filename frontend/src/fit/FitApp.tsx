@@ -34,7 +34,6 @@ export default function FitApp() {
   const [ticks, setTicks] = useState({});
   const [kg, setKgState] = useState({});
   const [scans, setScans] = useState([]);
-  const [aiRead, setAiRead] = useState(false);
   const [memes, setMemes] = useState([]);
   const memesRef = useRef([]);
   const [vapid, setVapid] = useState("");
@@ -131,7 +130,6 @@ export default function FitApp() {
       setTicks(st.ticks || {});
       setKgState(st.kg || {});
       setScans(st.scans || []);
-      setAiRead(!!st.aiRead);
       memesRef.current = st.memes || [];
       setMemes(memesRef.current);
       setVapid(st.vapidPublicKey || "");
@@ -254,7 +252,7 @@ export default function FitApp() {
             <main hidden={tab !== "today"}>{tab === "today" && <Today {...common} done={selDone} toggle={toggleTick} kg={kg} setKg={setKg} openGym={() => { setTab("gym"); window.scrollTo({ top: 0 }); }} />}</main>
             <main hidden={tab !== "gym"}>{tab === "gym" && <Gym {...common} done={selDone} toggle={toggleTick} clear={clearTicks} kg={kg} setKg={setKg} />}</main>
             <main hidden={tab !== "meals"}>{tab === "meals" && <Meals {...common} done={selDone} toggle={toggleTick} />}</main>
-            <main hidden={tab !== "prog"}>{tab === "prog" && <Progress scans={scans} aiRead={aiRead} reload={reloadScans} today={today} saveOVR={saveOVR} ver={ver} />}</main>
+            <main hidden={tab !== "prog"}>{tab === "prog" && <Progress scans={scans} reload={reloadScans} today={today} saveOVR={saveOVR} ver={ver} />}</main>
             <main hidden={tab !== "edit"}>{tab === "edit" && <Edit sel={sel} ver={ver} saveOVR={saveOVR} vapid={vapid} memes={memes} onMemes={(m) => { memesRef.current = m; setMemes(m); syncReminders(); }} />}</main>
           </>
         )}
@@ -676,6 +674,12 @@ function HowTo({ dk, clear }) {
         <li>Kneeling hip flexor: 2 × 30 s per side</li><li>Lying figure-4 glute: 2 × 30 s per side</li><li>Doorway chest: 2 × 30 s</li>
         <li>Gentle cat-camel: 8 slow reps</li><li>Calf stretch on a wall: 2 × 30 s</li><li>Chin tucks: 10</li>
         <li>No deep toe touches or seated forward folds. Stop if the left leg tingles.</li></ul></div></details>
+      <details className="box"><summary>Belly fat, honestly</summary><div className="in"><ul>
+        <li>You can’t burn fat from one spot. Belly fat goes as total body fat drops: the deficit, protein and daily steps do most of the work.</li>
+        <li>What the gym adds: muscle (burns more all day) and a strong, flat core. Mon and Fri end with an 8-min back-safe core finisher.</li>
+        <li>For your L5-S1 disc: no crunches, sit-ups, Russian twists, leg raises or heavy bending. Core work is bracing: dead bug, bird dog, side plank, Pallof press.</li>
+        <li>Steady walking beats jumping and sprints for you: low impact, easy on the back, and it adds up. 10–12k steps in the fat-loss phases.</li>
+        <li>Sleep 7+ hours and keep the night kitchen closed: short sleep and late snacking push fat to the belly.</li></ul></div></details>
       <details className="box"><summary>Back rules (non-negotiable)</summary><div className="in"><ul>
         <li>No deadlifts, Romanian deadlifts, kettlebell swings, barbell back squats, sit-ups or fast twisting.</li>
         <li>Machines and supported positions first. End the set when form slips.</li>
@@ -785,7 +789,7 @@ async function shrink(file) {
   } catch { return file; }
 }
 
-function Progress({ scans, aiRead, reload, today, saveOVR }) {
+function Progress({ scans, reload, today, saveOVR }) {
   const blank = () => ({ date: iso(today), time: "evening" });
   const [draft, setDraft] = useState(blank);
   const [file, setFile] = useState(null);
@@ -799,42 +803,6 @@ function Progress({ scans, aiRead, reload, today, saveOVR }) {
   const eve = list.filter((x) => x.time !== "morning" && x.fat != null);
   const first = eve[eve.length - 1], latest = eve[0];
   const set = (k, v) => setDraft((d) => ({ ...d, [k]: v }));
-
-  const [manual, setManual] = useState(!aiRead);
-  // Pick a photo → read the numbers → save. No form to check.
-  const auto = async (f) => {
-    setFile(f); setMsg("");
-    if (!f) return;
-    if (!aiRead || !f.type.startsWith("image/")) {
-      setManual(true);
-      setMsg(!aiRead ? "Photo reading isn’t switched on yet, so type the numbers below." : "PDFs can’t be read automatically. Type the numbers below.");
-      return;
-    }
-    setBusy("read");
-    try {
-      const img = await shrink(f);
-      const up = img === f ? f : new File([img], "scan.jpg", { type: "image/jpeg" });
-      const fd = new FormData();
-      fd.append("image", up, up.name);
-      const r = await api("POST", "/api/fit/scans/read", fd, true);
-      const rec = { date: /^\d{4}-\d{2}-\d{2}$/.test(r.date || "") ? r.date : iso(today), time: typeof r.hour === "number" ? (r.hour < 14 ? "morning" : "evening") : "evening" };
-      FIELDS.forEach(([k]) => { if (typeof r[k] === "number") rec[k] = r[k]; });
-      if (rec.weight == null) throw new Error("no weight");
-      setBusy("save");
-      const sd = new FormData();
-      sd.append("data", JSON.stringify(rec));
-      sd.append("file", up, up.name);
-      await api("POST", "/api/fit/scans", sd, true);
-      await reload();
-      const bits = [`${rec.weight} kg`, rec.fat != null && `${rec.fat} kg fat`, rec.pbf != null && `${rec.pbf}%`, rec.smm != null && `${rec.smm} kg muscle`].filter(Boolean).join(" · ");
-      setMsg(`Saved ${fmtD(dateOf(rec.date))} (${rec.time}): ${bits}.`);
-      setFile(null); setManual(false); setFormKey((k) => k + 1);
-    } catch {
-      setManual(true);
-      setMsg("Couldn’t read that photo. Try a sharper, straight-on shot, or type the numbers below.");
-    }
-    setBusy("");
-  };
 
   const save = async (e) => {
     e.preventDefault();
@@ -872,15 +840,11 @@ function Progress({ scans, aiRead, reload, today, saveOVR }) {
       )}
       <div className="ecard">
         <h3>Add a scan</h3>
-        <label className={`scan-drop${busy ? " busy" : ""}`} htmlFor="scanfile">
-          <b>{busy === "read" ? "Reading the report…" : busy === "save" ? "Saving…" : "Upload scan photo"}</b>
-          <span>{aiRead ? "Numbers are read and saved automatically" : "Photo or PDF of the report"}</span>
-          <input key={formKey} id="scanfile" type="file" accept="image/*,application/pdf" disabled={!!busy} onChange={(e) => auto(e.target.files[0] || null)} />
-        </label>
+        <p className="meme-note">Type the numbers from the report. Attaching the photo is optional, it’s kept with the scan.</p>
         {msg && <p className="saved scan-msg" aria-live="polite">{msg}</p>}
-        <details className="scan-manual" open={manual} onToggle={(e) => setManual(e.currentTarget.open)}>
-          <summary>Type the numbers instead</summary>
+        <div className="scan-manual">
           <form onSubmit={save} key={formKey}>
+            <div className="fld"><label htmlFor="scanfile">Report photo or PDF (optional)</label><input id="scanfile" type="file" accept="image/*,application/pdf" onChange={(e) => setFile(e.target.files[0] || null)} /></div>
             {thumb && <img className="thumb" src={thumb} alt="Selected report" />}
             <div className="frow">
               <div className="fld"><label htmlFor="sdate">Scan date</label><input id="sdate" type="date" required defaultValue={draft.date} onChange={(e) => set("date", e.target.value)} /></div>
@@ -893,7 +857,7 @@ function Progress({ scans, aiRead, reload, today, saveOVR }) {
             </div>
             <div className="acts"><button className="btn" type="submit" disabled={busy === "save"}>{busy === "save" ? "Saving…" : "Save scan"}</button></div>
           </form>
-        </details>
+        </div>
       </div>
       <Targets scans={scans} today={today} saveOVR={saveOVR} />
       <Career today={today} saveOVR={saveOVR} />
@@ -1037,7 +1001,7 @@ function Edit({ sel, ver, saveOVR, vapid, memes, onMemes }) {
           <div className="cur"><b>Planned now{OVR.gym[k] ? " (your change)" : ""}</b>{(OVR.gym[k] || DEF.gym[k]).map((e) => `${e.name} ${e.kind ? e.reps : e.sets + " × " + e.reps}`).join(" · ")}</div>
           {gymList.map((e, i) => (
             <div className="exed" key={i}>
-              <div className="fld"><label htmlFor={`en${i}`}>Exercise {i + 1}{e.kind ? " (cardio)" : ""}</label><input id={`en${i}`} value={e.name} onChange={(ev) => updEx(i, "name", ev.target.value)} /></div>
+              <div className="fld"><label htmlFor={`en${i}`}>Exercise {i + 1}{e.kind ? ` (${e.kind})` : ""}</label><input id={`en${i}`} value={e.name} onChange={(ev) => updEx(i, "name", ev.target.value)} /></div>
               <div className="frow3">
                 <div className="fld"><label htmlFor={`es${i}`}>Sets</label><input id={`es${i}`} type="number" min="1" value={e.sets} disabled={!!e.kind} onChange={(ev) => updEx(i, "sets", ev.target.value)} /></div>
                 <div className="fld"><label htmlFor={`er${i}`}>{e.kind ? "Duration" : "Reps"}</label><input id={`er${i}`} value={e.reps} onChange={(ev) => updEx(i, "reps", ev.target.value)} /></div>

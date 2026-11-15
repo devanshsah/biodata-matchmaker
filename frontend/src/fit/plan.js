@@ -44,6 +44,7 @@ const GYM={
     {name:'Lying leg curl',sr:'3 × 12–15',sets:3,rest:'60 s',cue:'Hips pressed into the pad. No jerking.'},
     {name:'Side-lying leg raise',sr:'2 × 15 / side',sets:2,rest:'45 s',cue:'Glute medius. Toes slightly down, slow.'},
     {name:'Seated calf raise',sr:'3 × 15',sets:3,rest:'45 s',cue:'Full stretch at the bottom, pause at the top.'},
+    {kind:'core',name:'Core finisher (back-safe)',sr:'8 min',sets:1,cue:'2 rounds: dead bug 8/side → Pallof press 10/side → side plank 25 s/side. Brace, slow, no pain. No crunches, sit-ups, Russian twists or leg raises: they load your L5-S1 disc.'},
     {kind:'cardio',name:'Incline walk',sr:'15 min',sets:1,cue:'Talking pace, ~115–135 bpm. Don’t hold the rails.'}]},
   wed:{title:'Upper body A',ex:[WARM,
     {name:'Machine chest press',sr:'3 × 8–12',sets:3,rest:'2 min',cue:'Feet flat, back on the pad, 2 s down.'},
@@ -61,6 +62,7 @@ const GYM={
     {name:'Cable kickback',sr:'2 × 12 / side',sets:2,rest:'45 s',cue:'Kick back with the glute, not the lower back.'},
     {name:'Low step-ups',sr:'2 × 10 / leg',sets:2,rest:'60 s',cue:'Knee-height box or lower. Push through the heel.'},
     {name:'Pallof press',sr:'3 × 10 / side',sets:3,rest:'30 s',cue:'Cable at chest height. Resist the twist.'},
+    {kind:'core',name:'Core finisher (back-safe)',sr:'8 min',sets:1,cue:'2 rounds: dead bug 8/side → Pallof press 10/side → side plank 25 s/side. Brace, slow, no pain. No crunches, sit-ups, Russian twists or leg raises: they load your L5-S1 disc.'},
     {kind:'cardio',name:'Bike intervals',sr:'10 min',sets:1,cue:'30 s fast / 60 s easy, then easy. Back straight.'}]},
   sat:{title:'Upper body B',ex:[WARM,
     {name:'Dumbbell bench press',sr:'3 × 8–12',sets:3,rest:'2 min',cue:'Feet flat, shoulder blades pinched.'},
@@ -74,7 +76,13 @@ const GYM={
 };
 function exFor(k,ph){
   return GYM[k].ex.map((e,i)=>{
-    if(e.kind) {const x={...e}; if((ph.scheme==='volume'||ph.scheme==='strength')&&e.name==='Bike intervals'){x.sr='12 min'} return x;}
+    if(e.kind) {const x={...e};
+      if(ph.scheme==='volume'||ph.scheme==='strength'){
+        if(e.name==='Bike intervals') x.sr='12 min';
+        else if(e.kind==='cardio'){const mn=parseInt(e.sr,10); if(mn) {x.sr=(mn+5)+' min'; x.cue=e.cue+' Fat-loss phase: +5 min.';}}
+      }
+      if(ph.scheme==='deload'&&e.kind==='core') x.sr='5 min';
+      return x;}
     let sets=e.sets, tail=e.sr.split('×')[1];
     const main=i===1||i===2; // the first two lifts after the warm-up are the ones that progress
     if(ph.scheme==='volume'&&main) sets=e.sets+1;

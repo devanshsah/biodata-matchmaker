@@ -39,17 +39,15 @@ public class FitController {
     private final JdbcTemplate db;
     private final ObjectMapper json;
     private final PushSender push;
-    private final ScanReader reader;
     private final FileStore files;
     private final ReminderEngine reminders;
     private final ZoneId zone;
 
-    public FitController(JdbcTemplate db, ObjectMapper json, PushSender push, ScanReader reader, FileStore files,
+    public FitController(JdbcTemplate db, ObjectMapper json, PushSender push, FileStore files,
                          ReminderEngine reminders, @Value("${app.zone}") String zone) {
         this.db = db;
         this.json = json;
         this.push = push;
-        this.reader = reader;
         this.files = files;
         this.reminders = reminders;
         this.zone = ZoneId.of(zone);
@@ -73,7 +71,6 @@ public class FitController {
         out.put("kg", kg);
         out.put("scans", scans());
         out.put("memes", MemeController.list(db));
-        out.put("aiRead", reader.enabled());
         out.put("vapidPublicKey", push.publicKey());
         return out;
     }
@@ -195,17 +192,6 @@ public class FitController {
         db.update("DELETE FROM fit_scans WHERE day = ?", d);
         if (!old.isEmpty()) files.delete(old.get(0));
         return Map.of("ok", true);
-    }
-
-    @PostMapping("/scans/read")
-    public JsonNode readScan(@RequestParam("image") MultipartFile image) {
-        if (!reader.enabled()) throw ApiErrors.bad("Photo reading is off. Set ANTHROPIC_API_KEY.");
-        if (image.getSize() > 5 * 1024 * 1024 || !IMAGE_TYPES.contains(image.getContentType())) throw ApiErrors.bad("Send a JPEG or PNG photo under 5 MB");
-        try {
-            return reader.read(image.getBytes(), image.getContentType());
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Couldn’t read the photo");
-        }
     }
 
     /* ---------- reminders ---------- */

@@ -107,8 +107,5 @@ cat <<EOF
 All set. Next: merge the pull request on GitHub (or push to main).
 GitHub Actions then builds and deploys the site to Cloud Run ($REGION).
 Watch it here:  https://github.com/$REPO_SLUG/actions
-
-Optional: to let the app read numbers off scan photos, add your Claude API key:
-  gh secret set ANTHROPIC_API_KEY --repo $REPO_SLUG
 =====================================================================
 EOF

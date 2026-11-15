@@ -7,7 +7,6 @@
 #   DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD   from Neon
 #   CRON_KEY                            from deploy/gcp-setup.sh
 #   VAPID_SUBJECT                       e.g. mailto:you@example.com
-#   ANTHROPIC_API_KEY                   optional, for reading scan photos
 
 name: Deploy to Cloud Run
 
@@ -70,7 +69,6 @@ jobs:
           DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
           CRON_KEY: ${{ secrets.CRON_KEY }}
           VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           # JSON is valid YAML, and jq handles any quoting in the values
           jq -n \
@@ -79,9 +77,8 @@ jobs:
             --arg DATABASE_PASSWORD "$DATABASE_PASSWORD" \
             --arg CRON_KEY "$CRON_KEY" \
             --arg VAPID_SUBJECT "${VAPID_SUBJECT:-mailto:you@example.com}" \
-            --arg ANTHROPIC_API_KEY "$ANTHROPIC_API_KEY" \
             '{DATABASE_URL:$DATABASE_URL, DATABASE_USER:$DATABASE_USER, DATABASE_PASSWORD:$DATABASE_PASSWORD,
-              CRON_KEY:$CRON_KEY, VAPID_SUBJECT:$VAPID_SUBJECT, ANTHROPIC_API_KEY:$ANTHROPIC_API_KEY}' > "$RUNNER_TEMP/env.yaml"
+              CRON_KEY:$CRON_KEY, VAPID_SUBJECT:$VAPID_SUBJECT}' > "$RUNNER_TEMP/env.yaml"
 
       - name: Deploy to Cloud Run
         run: |
