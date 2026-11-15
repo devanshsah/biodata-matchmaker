@@ -210,7 +210,7 @@ function applyOVR(){
   STUDY.how=Object.assign(clone(DEF.study.how),OVR.study.how||{});
   Object.keys(GYM).forEach(k=>{const list=OVR.gym[k]||DEF.gym[k];GYM[k].ex=[WARM,...list.map(e=>({name:e.name,kind:e.kind||undefined,sets:e.kind?1:Math.max(1,+e.sets||1),sr:e.kind?e.reps:(Math.max(1,+e.sets||1)+' × '+e.reps),rest:e.rest,cue:e.cue}))]});
 }
-const SHAKE={n:'1 scoop whey isolate in water',p:26,how:'Isolate is easier on the gut than concentrate. Within 30 min after the gym.'};
+const SHAKE={n:'1 scoop The Whole Truth whey in water',p:24,how:'Within 30 min after the gym, in 250 ml water. Bloating after it? Try their isolate (less lactose).'};
 const SCANS=['2026-11-16','2026-12-11','2026-12-26','2027-01-22','2027-02-26','2027-03-10','2027-03-26','2027-05-14'];
 const ONCE={
   '2026-11-21':{id:'blood',m:455,title:'Blood test (fasting)',d:'Before breakfast. CBC, ferritin, vitamin D, B12, TSH, HbA1c, lipid profile. Book a home collection.'},
