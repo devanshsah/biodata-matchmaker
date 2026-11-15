@@ -50,13 +50,18 @@ self.addEventListener('notificationclick', (event) => {
       }
       return;
     }
-    // Tap on an end-of-slot reminder (the iPhone path): open the app and let it log the task.
-    const q = t.kind === 'late' && event.action !== 'open' ? 'log=' + encodeURIComponent(t.day + '|' + t.item) : '';
-    for (const c of all) {
-      if ('focus' in c) {
-        if (q) c.postMessage({ type: 'log', day: t.day, item: t.item });
-        return c.focus();
+    // Tap on an end-of-slot reminder (the iPhone path). iOS always brings the app up on a tap,
+    // so log it here first (instant, even before the app loads) and let the app just show "Logged ✓ · Undo".
+    let q = '';
+    if (t.kind === 'late' && event.action !== 'open' && t.day && t.item) {
+      let saved = false;
+      try { await logTask(t.day, t.item); saved = true; } catch (e) {}
+      q = (saved ? 'logged=' : 'log=') + encodeURIComponent(t.day + '|' + t.item);
+      for (const c of all) {
+        if ('focus' in c) { c.postMessage({ type: saved ? 'logged' : 'log', day: t.day, item: t.item }); return c.focus(); }
       }
+    } else {
+      for (const c of all) { if ('focus' in c) return c.focus(); }
     }
     return self.clients.openWindow(appUrl(q));
   })());

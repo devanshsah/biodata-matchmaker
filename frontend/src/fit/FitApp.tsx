@@ -197,10 +197,10 @@ export default function FitApp() {
   }, []);
   useEffect(() => {
     if (!ready) return;
-    const q = new URLSearchParams(location.search).get("log");
+    const sp = new URLSearchParams(location.search), q = sp.get("log") || sp.get("logged");
     if (q) {
       const [day, item] = q.split("|");
-      markDone(day, item);
+      markDone(day, item, sp.has("logged"));
       history.replaceState(null, "", location.pathname);
     }
     if (!("serviceWorker" in navigator)) return;
