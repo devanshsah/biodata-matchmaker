@@ -22,7 +22,7 @@ import com.devanshsah.site.common.ApiErrors;
 @RestController
 @RequestMapping("/api/fit/memes")
 public class MemeController {
-    static final Set<String> MOMENTS = Set.of("late", "start", "wake", "meal", "study", "sleep");
+    static final Set<String> MOMENTS = Set.of("late", "start", "gym", "walk", "wake", "meal", "study", "sleep");
 
     public record Meme(Long id, String text, String moment, Boolean active) {}
 

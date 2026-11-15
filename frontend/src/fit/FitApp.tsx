@@ -91,10 +91,19 @@ export default function FitApp() {
 
   const syncReminders = useCallback(() => {
     const today = ist().date, items = [];
-    const pick = memePicker(memesRef.current);
+    const pools = memePools(memesRef.current);
     for (let i = 0; i < 14; i++) {
       const d = addDays(today, i);
       if (d < FIRST || d > LAST) continue;
+      const dayN = Math.round((d - FIRST) / 864e5), seen = {};
+      // Each event moves one line along every day, and events on the same day get different lines.
+      const pick = (moment) => {
+        let pool = pools[moment] || [];
+        if (!pool.length && (moment === "gym" || moment === "walk")) { moment = "start"; pool = pools.start || []; }
+        if (!pool.length) return "";
+        const i = (seen[moment] = (seen[moment] ?? -1) + 1);
+        return pool[(dayN + i) % pool.length];
+      };
       for (const x of plan(d).all) {
         const info = shorten(x.list ? x.list.join(" • ") : x.d);
         const line = pick(momentOf(x));
@@ -1025,7 +1034,8 @@ function Edit({ sel, ver, saveOVR, vapid, memes, onMemes }) {
 }
 
 /* ---------- meme lines for notifications ---------- */
-const MOMENTS = [["late", "Late / missed", "Task not ticked 30 min after it starts"], ["start", "Workout & tasks", "When a walk, gym or other task starts"],
+const MOMENTS = [["late", "Late / missed", "Task not ticked 30 min after it starts"], ["gym", "Gym & dance", "When a gym session or dance class starts"], ["walk", "Walks", "When the morning walk starts"],
+  ["start", "Other tasks", "Workday habits, core, body scan (and gym/walks if those groups are empty)"],
   ["wake", "Wake-up", "The wake-up alarm"], ["meal", "Meals & prep", "When a meal or meal prep starts"],
   ["study", "Study", "When an upskilling block starts"], ["sleep", "Sleep", "The lights-out reminder"]];
 
@@ -1034,23 +1044,18 @@ function momentOf(x) {
   if (x.kind === "food" || x.kind === "prep") return "meal";
   if (x.kind === "study") return "study";
   if (x.kind === "rest") return "sleep";
+  if (x.kind === "lift" || x.id === "eve") return "gym";
+  if (x.id === "walk") return "walk";
   return "start";
 }
 
-// Shuffled deck per moment, so a line doesn't repeat until the others have shown.
-function memePicker(list) {
-  const decks = {}, last = {};
-  return (moment) => {
-    const pool = list.filter((m) => m.active !== false && m.moment === moment).map((m) => m.text);
-    if (!pool.length) return "";
-    if (!decks[moment] || !decks[moment].length) {
-      const d = [...pool];
-      for (let i = d.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [d[i], d[j]] = [d[j], d[i]]; }
-      if (d.length > 1 && d[d.length - 1] === last[moment]) [d[0], d[d.length - 1]] = [d[d.length - 1], d[0]];
-      decks[moment] = d;
-    }
-    return (last[moment] = decks[moment].pop());
-  };
+// Lines per moment in a fixed (but mixed-up) order, so reminders don't change each time the app opens.
+function memePools(list) {
+  const pools = {};
+  for (const m of list) if (m.active !== false) (pools[m.moment] = pools[m.moment] || []).push(m);
+  const h = (t) => { let x = 7; for (const c of t) x = (x * 31 + c.charCodeAt(0)) >>> 0; return x; };
+  for (const k in pools) pools[k] = pools[k].sort((a, b) => h(a.text) - h(b.text)).map((m) => m.text);
+  return pools;
 }
 
 function Memes({ memes, onMemes }) {
