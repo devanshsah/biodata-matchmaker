@@ -96,7 +96,7 @@ export default function FitApp() {
         const body = shorten(x.list ? x.list.join(" • ") : x.d);
         items.push({ day: iso(d), item: x.id, kind: "start", minute: x.m, title: `${fmtT(x.m)} · ${x.title}`, body });
         if (x.id !== "sleep")
-          items.push({ day: iso(d), item: x.id, kind: "late", minute: x.m + 30, title: `Off track: ${x.title}`, body: `Planned for ${fmtT(x.m)} and not ticked yet. Do it now, or tick it if it’s done.` });
+          items.push({ day: iso(d), item: x.id, kind: "late", minute: x.m + 30, title: `${x.title}: still waiting`, body: `“By all means, move at a glacial pace. You know how that thrills me.” Planned for ${fmtT(x.m)}, not ticked yet.` });
       }
     }
     api("PUT", "/api/fit/reminders", { from: iso(today), items }).catch(() => {});
