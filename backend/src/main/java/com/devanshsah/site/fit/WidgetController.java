@@ -123,20 +123,21 @@ public class WidgetController {
             return ok(out);
         }
 
-        JsonNode cur = null, next = null;
+        // NOW = whatever slot you're in (an unticked task first, else the one in progress, ticked or not).
+        JsonNode cur = null, curAny = null, next = null;
         int behind = 0, got = 0, total = 0;
         for (JsonNode x : items) {
             int m = x.path("m").asInt(), end = x.path("end").asInt(m + 30);
             boolean counts = x.path("counts").asBoolean(true), isDone = isDone(x, done);
             if (counts) { total++; if (isDone) got++; }
-            if (m <= min && end > min && !isDone && counts) cur = cur == null ? x : cur;
+            if (m <= min && end > min) {
+                if (cur == null && counts && !isDone) cur = x;
+                curAny = x; // latest-starting slot that's open
+            }
             if (m > min && next == null) next = x;
             if (counts && !isDone && end <= min) behind++;
         }
-        if (cur == null) { // nothing open right now: show the last thing that started
-            for (JsonNode x : items) if (x.path("m").asInt() <= min && !"sleep".equals(x.path("id").asText())) cur = x;
-            if (cur != null && isDone(cur, done)) cur = null;
-        }
+        if (cur == null) cur = curAny;
         out.put("now", cur == null ? null : brief(cur, isDone(cur, done)));
         out.put("next", next == null ? null : brief(next, isDone(next, done)));
         out.put("behind", behind);
