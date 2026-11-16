@@ -121,6 +121,20 @@ export default function FitApp() {
       }
     }
     api("PUT", "/api/fit/reminders", { from: iso(today), items }).catch(() => {});
+    // The home-screen widget reads a copy of each day's plan (last 30 days for the streak, next 14).
+    const days = {};
+    for (let i = -30; i < 14; i++) {
+      const d = addDays(today, i);
+      if (d < FIRST || d > LAST) continue;
+      const all = plan(d).all;
+      days[iso(d)] = all.map((x) => {
+        const nx = all.find((y) => y.m > x.m);
+        const end = x.id === "work" ? 1140 : Math.min(x.m + 180, Math.max(x.m + 15, nx ? nx.m : x.m + 30));
+        return { id: x.id, m: x.m, end, title: x.title, kind: x.kind, counts: counts(x), p: x.p || 0,
+          sets: x.gym ? x.gym.filter((e) => !e.kind).reduce((a, e) => a + e.sets, 0) : 0 };
+      });
+    }
+    api("PUT", "/api/fit/dayplan", { days }).catch(() => {});
   }, []);
 
   const load = useCallback(async (jumpAfter) => {
@@ -1042,6 +1056,8 @@ function Edit({ sel, ver, saveOVR, vapid, memes, onMemes }) {
 
       {sec === "memes" && <Memes memes={memes} onMemes={onMemes} />}
 
+      <Widget />
+
       <div className="sec">Gym closure · 1 Dec – 30 Jan</div>
       <div className="ecard">
         <h3>Where you’ll train</h3>
@@ -1263,5 +1279,53 @@ function WeekMenu({ sel }) {
         ))}
       </div>
     </details>
+  );
+}
+
+/* ---------- home-screen widget (Scriptable) ---------- */
+function Widget() {
+  const [msg, setMsg] = useState("");
+  const [text, setText] = useState("");
+  const build = async (rotate) => {
+    const { key } = await api(rotate ? "POST" : "GET", rotate ? "/api/fit/widget-key/rotate" : "/api/fit/widget-key");
+    const src = await (await fetch("/fit-assets/scriptable-widget.js", { cache: "no-store" })).text();
+    const script = src.replace("__BASE__", location.origin).replace("__KEY__", key);
+    setText(script);
+    return script;
+  };
+  // iPhone only allows copying inside the tap itself, so hand the clipboard a promise straight away.
+  const copy = (rotate) => {
+    setMsg("");
+    if (rotate && !window.confirm("Make a new key? The old widget stops working until you paste the new script.")) return;
+    const job = build(rotate);
+    const done = () => setMsg(rotate ? "New key made and script copied. Paste it over the old one in Scriptable." : "Copied. Paste it into a new script in Scriptable.");
+    const fail = () => setMsg("Couldn’t copy automatically. Select the script below and copy it.");
+    try {
+      if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
+        navigator.clipboard.write([new ClipboardItem({ "text/plain": job.then((t) => new Blob([t], { type: "text/plain" })) })]).then(done, () => job.then((t) => navigator.clipboard.writeText(t)).then(done, fail));
+      } else job.then((t) => navigator.clipboard.writeText(t)).then(done, fail);
+    } catch { job.then(() => fail(), fail); }
+  };
+  return (
+    <>
+      <div className="sec">Home-screen widget</div>
+      <div className="ecard">
+        <h3>Widget (iPhone)</h3>
+        <ol className="widget-steps">
+          <li>Install <b>Scriptable</b> (free) from the App Store.</li>
+          <li>Tap <b>Copy widget script</b> below.</li>
+          <li>In Scriptable: <b>+</b> → paste → name it <b>DEVANSH.OS</b> → Done.</li>
+          <li>Home screen: long-press → <b>Edit</b> → <b>Add Widget</b> → Scriptable → small or medium → Add. Long-press the widget → <b>Edit Widget</b> → Script: DEVANSH.OS.</li>
+          <li>Lock screen too: Customize lock screen → add a Scriptable widget → same script.</li>
+        </ol>
+        <div className="acts">
+          <button className="btn" type="button" onClick={() => copy(false)}>Copy widget script</button>
+          <button className="btn ghost small" type="button" onClick={() => copy(true)}>New key</button>
+          <span className="saved" aria-live="polite">{msg}</span>
+        </div>
+        {text && msg.startsWith("Couldn’t") && <textarea className="widget-src" readOnly value={text} onFocus={(e) => e.currentTarget.select()} />}
+        <p className="meme-note">The script holds a private, read-only key: it can show today’s plan, nothing else. iPhone refreshes widgets every 15–30 min.</p>
+      </div>
+    </>
   );
 }
