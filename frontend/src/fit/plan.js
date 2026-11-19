@@ -203,7 +203,7 @@ const MENU={
     s:{n:'Fruit + bowl of curd',p:7,how:'Any seasonal fruit.'},
     d:{n:'Palak pesto pasta (60 g) + 50 g paneer',p:20,how:'Blend blanched palak + basil (optional) + 10 almonds + 1 tsp olive oil + green chilli + lemon + salt. Toss with whole-wheat pasta and pan-seared paneer.'}},
   sun:{
-    b:{n:'Onion poha with peanuts + curd + 1 scoop whey shake',p:37,how:'Weekend: the shake goes with breakfast.'},
+    b:{n:'Onion poha with peanuts + curd + 1 scoop plant protein shake',p:37,how:'Weekend: the shake goes with breakfast.'},
     l:{n:'Palak dal + rice + raita',p:17,how:'Use part of today’s batch dal, stir in chopped palak for 3 min. Jeera-hing tadka.'},
     s:{n:'30 g roasted chana + 1 amla',p:6,how:'Small bowl. Amla: winter vitamin C, good for hair and skin.'},
     d:{n:'Paneer tikka (100 g) + grilled broccoli + capsicum + 1 roti',p:24,how:'Marinate paneer, broccoli and capsicum in curd + spices, pan-sear or air-fry 8–10 min.'}}
@@ -218,7 +218,7 @@ function applyOVR(){
   STUDY.how=Object.assign(clone(DEF.study.how),OVR.study.how||{});
   Object.keys(GYM).forEach(k=>{const list=OVR.gym[k]||DEF.gym[k];GYM[k].ex=[WARM,...list.map(e=>({name:e.name,kind:e.kind||undefined,sets:e.kind?1:Math.max(1,+e.sets||1),sr:e.kind?e.reps:(Math.max(1,+e.sets||1)+' × '+e.reps),rest:e.rest,cue:e.cue}))]});
 }
-const SHAKE={n:'1 scoop The Whole Truth whey in water',p:24,how:'Within 30 min after the gym, in 250 ml water. Bloating after it? Try their isolate (less lactose).'};
+const SHAKE={n:'1 scoop The Whole Truth plant protein in water',p:24,how:'Within 30 min after training, in 250–300 ml water. Shake well, plant protein settles.'};
 const SCANS=['2026-11-16','2026-11-27','2027-02-05','2027-02-26','2027-03-10','2027-03-26','2027-05-14'];
 const ONCE={
   '2026-11-21':{id:'blood',m:455,title:'Blood test (fasting)',d:'Before breakfast. CBC, ferritin, vitamin D, B12, TSH, HbA1c, lipid profile. Book a home collection.'},
@@ -300,7 +300,7 @@ function vacayDay(d,k,w,ph){
 // Up & out (wake, walk) · protein meals (b, l, d) · train (gym, eve) · kitchen closed (kc) · study (st1, st2) · Sunday batch prep.
 const ESSENTIAL=new Set(['wake','walk','b','l','d','gym','eve','kc','st1','st2','batch']);
 const FALLBACK={
-  b:'Curd + 1 banana + 1 scoop whey. 2 min, no cooking.',
+  b:'Curd + 1 banana + 1 scoop plant protein. 2 min, no cooking.',
   l:'Sunday batch dal + 2 ready rotis + curd. Heat and eat by 1:30.',
   s:'30 g roasted chana + a glass of chaas.',
   d:'10-min paneer bhurji, or besan chilla + curd.'
@@ -331,7 +331,7 @@ function plan(d){
   if(T.st1){const r=sf.light&&T.st1[1]-T.st1[0]>60?[T.st1[0],T.st1[0]+60]:T.st1; train.push({id:'st1',m:r[0],kind:'study',title:'Upskill · '+dur(r)+' · '+sf.am,d:fmtT(r[0])+'–'+fmtT(r[1])+'. Phone on silent. '+sf.amHow});}
   const hairDay=['mon','thu','sat'].includes(k);
   train.push({id:'skinam',m:T.skin,kind:'routine',title:'Shower + skin'+(hairDay?' + hair':'')+' · 5 min',d:'Gentle cleanser → niacinamide serum → moisturiser → SPF 50 (WFH days too).'+(hairDay?' Hair wash day: '+(k==='sat'?'mild shampoo':'ketoconazole 2% shampoo, leave 3 min')+', then a 4-min scalp massage.':'')});
-  if(T.go) train.push({id:'togym',m:T.go,kind:'routine',title:'Leave for the gym · 30 min',d:'Bag, shaker with whey, water bottle. Use the ride: a tech podcast or a system-design video.'});
+  if(T.go) train.push({id:'togym',m:T.go,kind:'routine',title:'Leave for the gym · 30 min',d:'Bag, shaker with plant protein, water bottle. Use the ride: a tech podcast or a system-design video.'});
   if(T.back) train.push({id:'home',m:T.back,kind:'routine',title:'Head home · 30 min',d:'Shake on the way if you haven’t had it.'});
   if(workday) train.push({id:'work',m:600,kind:'routine',title:'Work · 10 am – 7 pm',d:'Stand and walk 2–3 min every hour. Screen at eye level. 2 L water. Chin tucks ×10, three times. No desk snacks except the planned one.'});
   if(k==='sun') train.push({id:'reset',m:T.wake+20,kind:'rest',title:'Reset + socialise',d:'No gym. Mornings and evenings are yours: see people, go out, rest. An easy walk anytime is a bonus.'});
@@ -361,7 +361,7 @@ function plan(d){
   const trainDay=gymDay||dance;
   const sd=seedsFor(w), add=(meal,seed)=>({...meal,d:meal.d+' + '+SEEDS[seed].n,p:meal.p+SEEDS[seed].p,how:(meal.how||'')+' '+SEEDS[seed].how});
   const _mp=meals.push.bind(meals);
-  const scoop2=(x)=>trainDay&&!/whey/i.test(x.d)?{...x,title:x.title+' + scoop 2',d:x.d+' + 1 scoop whey in water',p:x.p+SHAKE.p}:x;
+  const scoop2=(x)=>trainDay&&!/whey|protein shake|plant protein/i.test(x.d)?{...x,title:x.title+' + scoop 2',d:x.d+' + 1 scoop plant protein in water',p:x.p+SHAKE.p}:x;
   meals.push=(x)=>_mp(x.id==='b'?scoop2(sd.alsi?add(x,'alsi'):x):x.id==='s'?add(sd.chia?add(x,'chia'):x,'pumpkin'):x);
   meals.push(amGym||garden?{id:'b',m:T.b,kind:'food',title:'Breakfast + post-workout shake',d:m.b.n+' + '+SHAKE.n,p:m.b.p+SHAKE.p,how:m.b.how+' Shake within 30 min of the gym.'}:{id:'b',m:T.b,kind:'food',title:'Breakfast',d:m.b.n,p:m.b.p,how:m.b.how});
   meals.push(k==='sat'&&!garden?{id:'l',m:T.l,kind:'food',title:'Lunch + post-gym shake',d:m.l.n+' + '+SHAKE.n,p:m.l.p+SHAKE.p,how:m.l.how}:{id:'l',m:T.l||780,kind:'food',title:'Lunch',d:m.l.n+' · saunf + 10 min walk after',p:m.l.p,how:m.l.how});
