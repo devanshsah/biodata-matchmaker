@@ -27,6 +27,16 @@ self.addEventListener('push', (event) => {
   }));
 });
 
+// Remove every notification for this task (its start alert and its "done?" alert).
+async function clearTask(day, item) {
+  const list = await self.registration.getNotifications();
+  list.filter((n) => (n.tag || '').startsWith(`${day}-${item}-`)).forEach((n) => n.close());
+}
+self.addEventListener('message', (e) => {
+  const m = e.data || {};
+  if (m.type === 'clear' && m.day && m.item) e.waitUntil(clearTask(m.day, m.item));
+});
+
 async function logTask(day, item) {
   const r = await fetch(`/api/fit/ticks/${day}/${encodeURIComponent(item)}`, {
     method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ done: true })
@@ -43,6 +53,7 @@ self.addEventListener('notificationclick', (event) => {
     if (event.action === 'log' && t.day && t.item) {
       try {
         await logTask(t.day, t.item);
+        await clearTask(t.day, t.item);
         all.forEach((c) => c.postMessage({ type: 'logged', day: t.day, item: t.item }));
         await self.registration.showNotification('Logged ✓', { body: n.title.replace(/ — done\?$/, ''), tag: 'logged-' + n.tag, icon: ICON, silent: true });
       } catch (e) {
@@ -55,7 +66,7 @@ self.addEventListener('notificationclick', (event) => {
     let q = '';
     if (t.kind === 'late' && event.action !== 'open' && t.day && t.item) {
       let saved = false;
-      try { await logTask(t.day, t.item); saved = true; } catch (e) {}
+      try { await logTask(t.day, t.item); saved = true; await clearTask(t.day, t.item); } catch (e) {}
       q = (saved ? 'logged=' : 'log=') + encodeURIComponent(t.day + '|' + t.item);
       for (const c of all) {
         if ('focus' in c) { c.postMessage({ type: saved ? 'logged' : 'log', day: t.day, item: t.item }); return c.focus(); }

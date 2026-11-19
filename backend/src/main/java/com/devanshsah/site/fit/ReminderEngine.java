@@ -90,11 +90,14 @@ public class ReminderEngine {
         // Right after a restart, don't resend reminders from before it started
         Instant from = startedAt.isAfter(now.minus(CATCH_UP)) ? startedAt.minus(Duration.ofMinutes(2)) : now.minus(CATCH_UP);
         int n = 0;
+        Set<LocalDate> refreshed = new java.util.HashSet<>();
         for (Reminder r : upcoming) {
             if (r.fireAt().isAfter(now)) break;
             if (r.fireAt().isBefore(from) || sent.contains(r.key())) continue;
             sent.add(r.key());
-            if ("late".equals(r.kind()) && isDone(r.day(), r.item())) continue;
+            // Read the day's ticks fresh from the database before sending, so anything logged anywhere is respected.
+            if (refreshed.add(r.day())) refreshTicks(r.day());
+            if (isDone(r.day(), r.item())) continue; // logged already: no start or "done?" alert
             try {
                 n += push.sendAll(r.title(), r.body(), r.day() + "-" + r.item() + "-" + r.kind()) > 0 ? 1 : 0;
             } catch (RuntimeException e) {
@@ -106,9 +109,19 @@ public class ReminderEngine {
         return n;
     }
 
+    private void refreshTicks(LocalDate day) {
+        try {
+            Set<String> s = ConcurrentHashMap.newKeySet();
+            db.query("SELECT item FROM fit_ticks WHERE day = ? AND done", rs -> { s.add(rs.getString("item")); }, Date.valueOf(day));
+            ticks.put(day, s);
+        } catch (RuntimeException e) {
+            log.warn("Couldn't refresh ticks for {}: {}", day, e.getMessage());
+        }
+    }
+
     private boolean isDone(LocalDate day, String item) {
         Set<String> s = ticks.getOrDefault(day, Set.of());
-        if ("gym".equals(item)) return s.contains("gym") || s.stream().anyMatch(x -> x.startsWith("g") && x.contains(":"));
+        if ("gym".equals(item)) return s.contains("gym") || s.stream().anyMatch(x -> x.matches("g\\d+:\\d+"));
         return s.contains(item);
     }
 }

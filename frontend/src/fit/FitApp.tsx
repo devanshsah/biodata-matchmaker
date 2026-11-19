@@ -190,6 +190,7 @@ export default function FitApp() {
     if (!cur[id]) delete cur[id];
     setTicks((t) => ({ ...t, [day]: cur }));
     api("PUT", `/api/fit/ticks/${day}`, cur).catch(() => {});
+    if (cur[id]) clearNotifs(day, /^g\d+:\d+$/.test(id) ? "gym" : id);
   }, []);
   // "Log it" from a notification: tick one task, show a toast with Undo.
   const [toast, setToast] = useState(null);
@@ -198,6 +199,7 @@ export default function FitApp() {
     const x = plan(new Date(day + "T00:00:00")).all.find((y) => y.id === item);
     if (!(ticksRef.current[day] || {})[item]) {
       setTicks((t) => ({ ...t, [day]: { ...(t[day] || {}), [item]: true } }));
+      clearNotifs(day, item);
       if (!alreadySaved) api("POST", `/api/fit/ticks/${day}/${encodeURIComponent(item)}`, { done: true }).catch(() => setToast({ day, item, title: "Couldn’t log it. Tick it on the Today tab.", err: true }));
     }
     setToast({ day, item, title: x ? x.title : item });
@@ -568,6 +570,13 @@ function BottomNav({ tab, setTab }) {
 
 /* ---------------- timeline row ---------------- */
 // Items that count toward the day: not lights-out, not optional bonus blocks.
+// Logging a task in the app also clears its notifications from the lock screen.
+const clearNotifs = (day, item) => {
+  try {
+    if (!("serviceWorker" in navigator)) return;
+    navigator.serviceWorker.ready.then((reg) => reg.getNotifications().then((list) => list.filter((n) => (n.tag || "").startsWith(`${day}-${item}-`) || (item === "gym" && (n.tag || "").startsWith(`${day}-gym-`))).forEach((n) => n.close()))).catch(() => {});
+  } catch {}
+};
 const counts = (x) => x.id !== "sleep" && !x.optional && !x.extra;
 function statusOf(x, list, sel, today, now, done) {
   if (isDoneItem(x, done)) return ["done", "DONE"];
