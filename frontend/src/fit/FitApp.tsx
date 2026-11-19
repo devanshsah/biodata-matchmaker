@@ -568,11 +568,12 @@ function BottomNav({ tab, setTab }) {
 
 /* ---------------- timeline row ---------------- */
 // Items that count toward the day: not lights-out, not optional bonus blocks.
-const counts = (x) => x.id !== "sleep" && !x.optional;
+const counts = (x) => x.id !== "sleep" && !x.optional && !x.extra;
 function statusOf(x, list, sel, today, now, done) {
   if (isDoneItem(x, done)) return ["done", "DONE"];
   const ds = iso(sel), ts = iso(today);
   if (x.optional && (ds < ts || (ds === ts && x.m + 30 <= now.min))) return ["later", "BONUS"];
+  if (x.extra && (ds < ts || (ds === ts && x.m + 30 <= now.min))) return ["later", "EXTRA"];
   if (ds < ts) return ["late", "MISSED"];
   if (ds > ts) return ["later", "LATER"];
   const n = now.min;
@@ -596,13 +597,14 @@ function Slot({ x, list, sel, today, now, done, onTick, children }) {
       <div className="card">
         <div className="ctop">
           <div style={{ minWidth: 0 }}>
-            <div className="kind"><i className="dot" />{KIND_LABEL[x.kind]}{x.p ? ` · ~${x.p} g protein` : ""}</div>
+            <div className="kind"><i className="dot" />{KIND_LABEL[x.kind]}{x.p ? ` · ~${x.p} g protein` : ""}{x.extra ? " · extra" : ""}</div>
             <h3>{x.title}</h3>
           </div>
           <span key={label} className={`pill ${st}`}>{label}</span>
         </div>
         {x.d && <p className="desc">{x.d}</p>}
         {x.list && <ul>{x.list.map((t, i) => <li key={i}>{t}</li>)}</ul>}
+        {x.fallback && !isDone && <p className="fallback"><b>No energy? Do this:</b> {x.fallback}</p>}
         {x.how && <details className="how"><summary>How to make it</summary><p>{x.how}</p></details>}
         {children}
         {!x.gym && (
@@ -721,8 +723,9 @@ function Today({ sel, today, now, done, toggle, kg, setKg, openGym }) {
         <p className="tag">{sub}</p>
         <div className="chips"><span className="chip">10k steps</span><span className="chip">~{p.protein} g protein</span><span className="chip">sleep 7–8 h</span><span className="chip">3–4 L water</span></div>
       </div>
+      <Essentials p={p} done={done} />
       <div className="note"><b>{p.ph.name} phase:</b> {p.ph.note}</div>
-      <div className="sec">Today’s schedule · training, fuel, everything</div>
+      <div className="sec">Today’s schedule · essentials count, extras are a bonus</div>
       <ol className="timeline">
         {p.all.map((x) => (
           <Slot key={x.id + x.m} x={x} list={p.all} sel={sel} today={today} now={now} done={done} onTick={(id) => toggle(dk, id)}>
@@ -1327,5 +1330,35 @@ function Widget() {
         <p className="meme-note">The script holds a private, read-only key: it can show today’s plan, nothing else. iPhone refreshes widgets every 15–30 min.</p>
       </div>
     </>
+  );
+}
+
+/* ---------- the 5 essentials: a good day, clearly defined ---------- */
+function Essentials({ p, done }) {
+  const has = (id) => p.all.some((x) => x.id === id);
+  const ok = (id) => !!(done || {})[id] || (id === "gym" && gymDone(done));
+  const meals = ["b", "l", "d"].filter(has), mealsDone = meals.filter(ok).length;
+  const studyIds = ["st1", "st2"].filter(has);
+  const rows = [
+    ["Up & out", has("walk") ? ok("wake") && ok("walk") : ok("wake"), has("walk") ? "Wake + walk" : "Wake up"],
+    ["Protein meals", mealsDone === meals.length, `${mealsDone}/${meals.length} meals`],
+    ["Train", has("gym") ? ok("gym") : has("eve") ? ok("eve") : null, has("gym") ? "Gym" : has("eve") ? "Dance" : "Rest day"],
+    ["Kitchen closed", ok("kc"), "Nothing after dinner"],
+    ["Study", studyIds.length ? studyIds.some(ok) : null, studyIds.length ? "One block" : "Day off"],
+  ];
+  const live = rows.filter((r) => r[1] !== null), got = live.filter((r) => r[1]).length;
+  return (
+    <div className="ess-card">
+      <div className="ess-head"><b>5 essentials</b><span>{got}/{live.length}{got === live.length ? " · good day ✓" : ""}</span></div>
+      <ul>
+        {rows.map(([name, v, sub]) => (
+          <li key={name} className={v === null ? "na" : v ? "on" : ""}>
+            <i aria-hidden="true">{v === null ? "–" : v ? "✓" : ""}</i>
+            <span>{name}<small>{sub}</small></span>
+          </li>
+        ))}
+      </ul>
+      <p>Everything else today is extra: do it if you have energy, it never counts against you.</p>
+    </div>
   );
 }

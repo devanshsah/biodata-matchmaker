@@ -296,9 +296,19 @@ function vacayDay(d,k,w,ph){
     {id:'d',m:1230,kind:'food',title:'Dinner',d:'Paneer or dal dish + 1 roti or small rice. One treat a day is fine: enjoy it, then stop.',p:20}];
   return {k,w,ph,vacay:true,train,meals,prep:[],protein:meals.reduce((a,x)=>a+x.p,0),all:[...train,...meals].sort((a,b)=>a.m-b.m)};
 }
+/* ---------- the 5 essentials: only these count toward the day ---------- */
+// Up & out (wake, walk) · protein meals (b, l, d) · train (gym, eve) · kitchen closed (kc) · study (st1, st2) · Sunday batch prep.
+const ESSENTIAL=new Set(['wake','walk','b','l','d','gym','eve','kc','st1','st2','batch']);
+const FALLBACK={
+  b:'Curd + 1 banana + 1 scoop whey. 2 min, no cooking.',
+  l:'Sunday batch dal + 2 ready rotis + curd. Heat and eat by 1:30.',
+  s:'30 g roasted chana + a glass of chaas.',
+  d:'10-min paneer bhurji, or besan chilla + curd.'
+};
+const markExtras=(p)=>{p.all.forEach(x=>{if(!ESSENTIAL.has(x.id)) x.extra=true; if(FALLBACK[x.id]) x.fallback=FALLBACK[x.id];}); return p;};
 function plan(d){
   const k=keyOf(d), w=Math.min(weekOf(d),WEEKS), ph=phaseOf(w);
-  if(isVacay(d)) return vacayDay(d,k,w,ph);
+  if(isVacay(d)) return markExtras(vacayDay(d,k,w,ph));
   const gymDay=!!GYM[k], garden=gymDay&&gardenOn(d);
   const m=MENU[k], tm=MENU[keyOf(addDays(d,1))], train=[], meals=[], prep=[];
   const weigh=['mon','wed','fri','sun'].includes(k), dance=DANCE.includes(k), amGym=gymDay&&AM_GYM.includes(k);
@@ -348,9 +358,11 @@ function plan(d){
   train.push({id:'skinpm',m:T.skinpm,kind:'routine',title:'Skin PM · 3 min',d:'Cleanser → moisturiser.'+(retinoid?' Retinoid night: pea-size amount (the one your dermatologist suggests) on dry skin before moisturiser. Skip if irritated.':'')});
   train.push({id:'sleep',m:T.sleep,kind:'rest',title:'Lights out',d:'Phone charges outside the bedroom. Cool room, 22–24 °C. About '+sleepFor+' h until tomorrow’s alarm.'});
 
+  const trainDay=gymDay||dance;
   const sd=seedsFor(w), add=(meal,seed)=>({...meal,d:meal.d+' + '+SEEDS[seed].n,p:meal.p+SEEDS[seed].p,how:(meal.how||'')+' '+SEEDS[seed].how});
   const _mp=meals.push.bind(meals);
-  meals.push=(x)=>_mp(x.id==='b'&&sd.alsi?add(x,'alsi'):x.id==='s'?add(sd.chia?add(x,'chia'):x,'pumpkin'):x);
+  const scoop2=(x)=>trainDay&&!/whey/i.test(x.d)?{...x,title:x.title+' + scoop 2',d:x.d+' + 1 scoop whey in water',p:x.p+SHAKE.p}:x;
+  meals.push=(x)=>_mp(x.id==='b'?scoop2(sd.alsi?add(x,'alsi'):x):x.id==='s'?add(sd.chia?add(x,'chia'):x,'pumpkin'):x);
   meals.push(amGym||garden?{id:'b',m:T.b,kind:'food',title:'Breakfast + post-workout shake',d:m.b.n+' + '+SHAKE.n,p:m.b.p+SHAKE.p,how:m.b.how+' Shake within 30 min of the gym.'}:{id:'b',m:T.b,kind:'food',title:'Breakfast',d:m.b.n,p:m.b.p,how:m.b.how});
   meals.push(k==='sat'&&!garden?{id:'l',m:T.l,kind:'food',title:'Lunch + post-gym shake',d:m.l.n+' + '+SHAKE.n,p:m.l.p+SHAKE.p,how:m.l.how}:{id:'l',m:T.l||780,kind:'food',title:'Lunch',d:m.l.n+' · saunf + 10 min walk after',p:m.l.p,how:m.l.how});
   const pre=dance?'Pre-dance snack':eveGym?'Pre-gym snack':'Snack';
@@ -369,7 +381,7 @@ function plan(d){
   prep.push({id:'pn',m:T.pn,kind:'prep',title:'Night prep for tomorrow · 10 min',list:night});
 
   const protein=meals.reduce((a,x)=>a+(x.p||0),0);
-  return {k,w,ph,train,meals,prep,protein,all:[...train,...meals,...prep].sort((a,b)=>a.m-b.m)};
+  return markExtras({k,w,ph,train,meals,prep,protein,all:[...train,...meals,...prep].sort((a,b)=>a.m-b.m)});
 }
 const wakeOf=d=>{const k=keyOf(d);return k==='sat'||k==='sun'?450:420;};
 
@@ -377,4 +389,4 @@ function setOVR(o){OVR=Object.assign({menu:{},study:{am:{},pm:{},how:{}},gym:{},
   if(!OVR.study.v2){OVR.study.am={};OVR.study.pm={};OVR.study.v2=true;} // topics from the old 6-week plan give way to the phased curriculum
   applyOVR();}
 const getOVR=()=>OVR;
-export {VACAY,GYM_CLOSED,isVacay,gardenOn,SEEDS,seedsFor,GOALS,SCANS,CAREER,careerOf,studyFor,HOW,START,WARMUP_START,WEEKS,DAY,KEYS,NAME,SHORT,ist,keyOf,iso,addDays,weekOf,fmtT,fmtD,PHASES,phaseOf,WARM,GYM,exFor,STUDY,FOCUS,DANCE,MENU,clone,DEF,applyOVR,setOVR,getOVR,SHAKE,BATCH,SHOP,plan};
+export {ESSENTIAL,FALLBACK,VACAY,GYM_CLOSED,isVacay,gardenOn,SEEDS,seedsFor,GOALS,SCANS,CAREER,careerOf,studyFor,HOW,START,WARMUP_START,WEEKS,DAY,KEYS,NAME,SHORT,ist,keyOf,iso,addDays,weekOf,fmtT,fmtD,PHASES,phaseOf,WARM,GYM,exFor,STUDY,FOCUS,DANCE,MENU,clone,DEF,applyOVR,setOVR,getOVR,SHAKE,BATCH,SHOP,plan};
